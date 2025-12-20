@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <title>Claims Processing System</title>
+  <base href="/">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+
+  <!-- Security Headers (CSP set via server) -->
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+
+  <!-- Preconnect to API -->
+  <link rel="preconnect" href="http://localhost:8000">
+
+  <!-- Healthcare Theme Colors -->
+  <meta name="theme-color" content="#0066CC">
+  <meta name="description" content="Medical Claims Processing System - Enterprise Healthcare Claims Management">
+</head>
+<body>
+  <app-root>
+    <!-- Loading state while Angular bootstraps -->
+    <div style="
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: linear-gradient(135deg, #0066CC 0%, #004C99 100%);
+    ">
+      <div style="text-align: center; color: white;">
+        <div style="
+          width: 50px;
+          height: 50px;
+          border: 4px solid rgba(255,255,255,0.3);
+          border-top-color: white;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+          margin: 0 auto 16px;
+        "></div>
+        <h2 style="margin: 0; font-weight: 500;">Claims Processing System</h2>
+        <p style="margin: 8px 0 0; opacity: 0.8; font-size: 14px;">Loading...</p>
+      </div>
+    </div>
+  </app-root>
+
+  <style>
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</body>
+</html>

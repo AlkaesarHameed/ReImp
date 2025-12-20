@@ -1,0 +1,42 @@
+# Claims Processing System - Kubernetes Namespace
+# Source: Design Document Section 6.1 - Deployment Architecture
+# Verified: 2025-12-18
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: claims-processor
+  labels:
+    app.kubernetes.io/name: claims-processor
+    app.kubernetes.io/managed-by: kubectl
+---
+# Resource Quota
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: claims-quota
+  namespace: claims-processor
+spec:
+  hard:
+    requests.cpu: "8"
+    requests.memory: 16Gi
+    limits.cpu: "16"
+    limits.memory: 32Gi
+    pods: "20"
+    services: "10"
+---
+# Limit Range
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: claims-limits
+  namespace: claims-processor
+spec:
+  limits:
+    - default:
+        cpu: "500m"
+        memory: "512Mi"
+      defaultRequest:
+        cpu: "100m"
+        memory: "128Mi"
+      type: Container

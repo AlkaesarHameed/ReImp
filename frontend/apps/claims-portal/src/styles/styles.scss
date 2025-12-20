@@ -1,0 +1,248 @@
+/**
+ * Global Styles.
+ * Source: Design Document Section 5.0
+ *
+ * Healthcare theme with HIPAA-compliant visual patterns.
+ */
+
+// Healthcare Color Palette
+$primary-blue: #0066CC;
+$secondary-blue: #004C99;
+$success-green: #28A745;
+$warning-yellow: #FFC107;
+$danger-red: #DC3545;
+$info-cyan: #17A2B8;
+$light-gray: #F8F9FA;
+$medium-gray: #6C757D;
+$dark-gray: #343A40;
+
+// CSS Variables for theme
+:root {
+  --primary-color: #{$primary-blue};
+  --primary-dark: #{$secondary-blue};
+  --success-color: #{$success-green};
+  --warning-color: #{$warning-yellow};
+  --danger-color: #{$danger-red};
+  --info-color: #{$info-cyan};
+  --surface-ground: #{$light-gray};
+  --text-color: #{$dark-gray};
+  --text-secondary: #{$medium-gray};
+}
+
+// Reset and base styles
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: $dark-gray;
+  background-color: $light-gray;
+}
+
+// Typography
+h1, h2, h3, h4, h5, h6 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  line-height: 1.2;
+  color: $dark-gray;
+}
+
+h1 { font-size: 2rem; }
+h2 { font-size: 1.75rem; }
+h3 { font-size: 1.5rem; }
+h4 { font-size: 1.25rem; }
+h5 { font-size: 1rem; }
+h6 { font-size: 0.875rem; }
+
+p {
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+// Links
+a {
+  color: $primary-blue;
+  text-decoration: none;
+
+  &:hover {
+    color: $secondary-blue;
+    text-decoration: underline;
+  }
+}
+
+// Form elements
+input, select, textarea {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+// Utility classes
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+.text-left { text-align: left; }
+
+.mt-1 { margin-top: 0.25rem; }
+.mt-2 { margin-top: 0.5rem; }
+.mt-3 { margin-top: 1rem; }
+.mt-4 { margin-top: 1.5rem; }
+.mt-5 { margin-top: 3rem; }
+
+.mb-1 { margin-bottom: 0.25rem; }
+.mb-2 { margin-bottom: 0.5rem; }
+.mb-3 { margin-bottom: 1rem; }
+.mb-4 { margin-bottom: 1.5rem; }
+.mb-5 { margin-bottom: 3rem; }
+
+.mr-1 { margin-right: 0.25rem; }
+.mr-2 { margin-right: 0.5rem; }
+.mr-3 { margin-right: 1rem; }
+
+.p-1 { padding: 0.25rem; }
+.p-2 { padding: 0.5rem; }
+.p-3 { padding: 1rem; }
+.p-4 { padding: 1.5rem; }
+
+.w-full { width: 100%; }
+.h-full { height: 100%; }
+
+.flex { display: flex; }
+.flex-1 { flex: 1; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.justify-center { justify-content: center; }
+.gap-1 { gap: 0.25rem; }
+.gap-2 { gap: 0.5rem; }
+.gap-3 { gap: 1rem; }
+
+// PrimeNG overrides for healthcare theme
+.p-button {
+  &.p-button-primary {
+    background: $primary-blue;
+    border-color: $primary-blue;
+
+    &:hover {
+      background: $secondary-blue;
+      border-color: $secondary-blue;
+    }
+  }
+}
+
+.p-card {
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+  .p-card-header {
+    background: transparent;
+    border-bottom: 2px solid $primary-blue;
+    padding: 1rem 1.5rem;
+    font-weight: 600;
+    color: $dark-gray;
+  }
+}
+
+.p-datatable {
+  .p-datatable-thead > tr > th {
+    background: $primary-blue !important;
+    color: white !important;
+    font-weight: 600;
+    border: none;
+  }
+
+  .p-datatable-tbody > tr {
+    &:nth-child(even) {
+      background: rgba($light-gray, 0.5);
+    }
+
+    &:hover {
+      background: rgba($primary-blue, 0.05) !important;
+    }
+  }
+}
+
+.p-tag {
+  font-weight: 500;
+  padding: 0.25rem 0.75rem;
+}
+
+// Status badges
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+
+  &.status-approved { background: #D4EDDA; color: #155724; }
+  &.status-pending { background: #FFF3CD; color: #856404; }
+  &.status-denied { background: #F8D7DA; color: #721C24; }
+  &.status-processing { background: #D1ECF1; color: #0C5460; }
+}
+
+// HIPAA notice styling
+.hipaa-notice {
+  background: #FFF3CD;
+  border: 1px solid #FFEEBA;
+  border-radius: 5px;
+  padding: 0.75rem 1rem;
+  font-size: 0.85rem;
+  color: #856404;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+// Loading spinner
+.loading-spinner {
+  display: inline-block;
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba($primary-blue, 0.2);
+  border-top-color: $primary-blue;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+// Accessibility
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+// Focus styles for accessibility
+:focus-visible {
+  outline: 2px solid $primary-blue;
+  outline-offset: 2px;
+}
+
+// Print styles
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}

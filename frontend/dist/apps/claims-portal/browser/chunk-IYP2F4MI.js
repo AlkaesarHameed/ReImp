@@ -1,0 +1,1 @@
+import"./chunk-4CLCTAJ7.js";var n=[{path:"",loadComponent:()=>import("./chunk-OTLIQG5O.js").then(o=>o.ReportsDashboardComponent)},{path:"claims",loadComponent:()=>import("./chunk-72QQANLV.js").then(o=>o.ClaimsReportComponent)},{path:"financial",loadComponent:()=>import("./chunk-J4H7OLFL.js").then(o=>o.FinancialReportComponent)}];export{n as REPORTS_ROUTES};

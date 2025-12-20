@@ -1,0 +1,173 @@
+# Claims Processing System - Kubernetes Services
+# Source: Design Document Section 6.1 - Deployment Architecture
+# Verified: 2025-12-18
+
+# API Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: claims-api
+  namespace: claims-processor
+  labels:
+    app: claims-api
+    app.kubernetes.io/name: claims-api
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000
+      protocol: TCP
+  selector:
+    app: claims-api
+---
+# Dashboard Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: claims-dashboard
+  namespace: claims-processor
+  labels:
+    app: claims-dashboard
+    app.kubernetes.io/name: claims-dashboard
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8501
+      targetPort: 8501
+      protocol: TCP
+  selector:
+    app: claims-dashboard
+---
+# Ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: claims-ingress
+  namespace: claims-processor
+  labels:
+    app.kubernetes.io/name: claims-processor
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  tls:
+    - hosts:
+        - claims.example.com
+        - dashboard.claims.example.com
+      secretName: claims-tls-secret
+  rules:
+    - host: claims.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: claims-api
+                port:
+                  number: 8000
+    - host: dashboard.claims.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: claims-dashboard
+                port:
+                  number: 8501
+---
+# Service Account
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: claims-processor
+  namespace: claims-processor
+  labels:
+    app.kubernetes.io/name: claims-processor
+---
+# ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: claims-config
+  namespace: claims-processor
+data:
+  config.yaml: |
+    environment: production
+    log_level: INFO
+    api:
+      host: 0.0.0.0
+      port: 8000
+      workers: 4
+    database:
+      pool_size: 10
+      max_overflow: 20
+    cache:
+      default_ttl: 3600
+      max_size: 10000
+    security:
+      jwt_expiry_hours: 24
+      rate_limit_per_minute: 100
+---
+# Horizontal Pod Autoscaler
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: claims-api-hpa
+  namespace: claims-processor
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: claims-api
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Percent
+          value: 10
+          periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 15
+        - type: Pods
+          value: 4
+          periodSeconds: 15
+      selectPolicy: Max
+---
+# Pod Disruption Budget
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: claims-api-pdb
+  namespace: claims-processor
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: claims-api

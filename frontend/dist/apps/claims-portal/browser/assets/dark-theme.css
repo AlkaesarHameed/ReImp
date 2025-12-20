@@ -1,0 +1,433 @@
+/**
+ * Dark Theme Styles.
+ * Source: Design Document - DESIGN_DUAL_INTERFACE_SYSTEM.md
+ * Based on: Metronic Demo7 Dark Mode
+ * Verified: 2024-12-19
+ *
+ * Provides dark mode styling for the Modern (Metronic) interface.
+ */
+
+/* ============================================
+   CSS Custom Properties for Dark Theme
+   ============================================ */
+:root[data-theme="dark"],
+html.dark-mode {
+  /* Background colors */
+  --bs-body-bg: #1e1e2d;
+  --bs-body-bg-rgb: 30, 30, 45;
+  --kt-app-bg-color: #1e1e2d;
+  --kt-app-blank-bg-color: #151521;
+
+  /* Surface colors */
+  --bs-card-bg: #1e1e2d;
+  --kt-card-bg: #1e1e2d;
+  --kt-card-border-color: #2b2b40;
+
+  /* Text colors */
+  --bs-body-color: #cdcdde;
+  --bs-body-color-rgb: 205, 205, 222;
+  --kt-text-gray-100: #f5f5f5;
+  --kt-text-gray-200: #eff2f5;
+  --kt-text-gray-300: #e4e6ef;
+  --kt-text-gray-400: #b5b5c3;
+  --kt-text-gray-500: #a1a5b7;
+  --kt-text-gray-600: #7e8299;
+  --kt-text-gray-700: #5e6278;
+  --kt-text-gray-800: #3f4254;
+  --kt-text-gray-900: #181c32;
+
+  /* Border colors */
+  --bs-border-color: #2b2b40;
+  --kt-border-color: #2b2b40;
+  --kt-border-dashed-color: #323248;
+
+  /* Primary colors (preserved) */
+  --bs-primary: #009ef7;
+  --bs-primary-rgb: 0, 158, 247;
+
+  /* Input colors */
+  --bs-input-bg: #1b1b29;
+  --bs-input-border-color: #323248;
+  --bs-input-color: #cdcdde;
+  --bs-input-placeholder-color: #565674;
+
+  /* Dropdown colors */
+  --bs-dropdown-bg: #1e1e2d;
+  --bs-dropdown-border-color: #2b2b40;
+
+  /* Table colors */
+  --bs-table-bg: transparent;
+  --bs-table-striped-bg: rgba(255, 255, 255, 0.025);
+  --bs-table-hover-bg: rgba(255, 255, 255, 0.05);
+
+  /* Modal colors */
+  --bs-modal-bg: #1e1e2d;
+  --bs-modal-border-color: #2b2b40;
+
+  /* Sidebar colors */
+  --kt-aside-bg-color: #1e1e2d;
+  --kt-aside-border-color: #2b2b40;
+
+  /* Header colors */
+  --kt-header-bg-color: #1e1e2d;
+}
+
+/* ============================================
+   Body Styles
+   ============================================ */
+html.dark-mode,
+html.dark-mode body,
+body.dark-mode {
+  background-color: #1e1e2d !important;
+  color: #cdcdde !important;
+}
+
+/* ============================================
+   Card Styles
+   ============================================ */
+.dark-mode .card {
+  background-color: #1e1e2d !important;
+  border-color: #2b2b40 !important;
+  box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.3) !important;
+}
+
+.dark-mode .card-header {
+  border-bottom-color: #2b2b40 !important;
+}
+
+.dark-mode .card-footer {
+  border-top-color: #2b2b40 !important;
+}
+
+.dark-mode .card-title,
+.dark-mode .card-label {
+  color: #cdcdde !important;
+}
+
+/* ============================================
+   App Header
+   ============================================ */
+.dark-mode .app-header {
+  background-color: #1e1e2d !important;
+  border-bottom: 1px solid #2b2b40 !important;
+  box-shadow: 0 1px 10px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* ============================================
+   App Sidebar
+   ============================================ */
+.dark-mode .app-sidebar {
+  background-color: #1b1b28 !important;
+  border-right: 1px solid #2b2b40 !important;
+}
+
+.dark-mode .app-sidebar .menu-title {
+  color: #9899ac !important;
+}
+
+.dark-mode .app-sidebar .menu-link:hover .menu-title,
+.dark-mode .app-sidebar .menu-link.active .menu-title {
+  color: #ffffff !important;
+}
+
+/* ============================================
+   App Toolbar
+   ============================================ */
+.dark-mode .app-toolbar {
+  background-color: #1e1e2d !important;
+  border-bottom: 1px solid #2b2b40 !important;
+}
+
+.dark-mode .page-heading {
+  color: #cdcdde !important;
+}
+
+/* ============================================
+   App Footer
+   ============================================ */
+.dark-mode .app-footer {
+  background-color: #1e1e2d !important;
+  border-top: 1px solid #2b2b40 !important;
+}
+
+/* ============================================
+   Tables
+   ============================================ */
+.dark-mode .table {
+  --bs-table-bg: transparent;
+  color: #cdcdde !important;
+}
+
+.dark-mode .table th {
+  color: #7e8299 !important;
+  border-bottom-color: #2b2b40 !important;
+}
+
+.dark-mode .table td {
+  border-bottom-color: #2b2b40 !important;
+}
+
+.dark-mode .table-row-dashed tr {
+  border-bottom-color: #2b2b40 !important;
+}
+
+.dark-mode .table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+.dark-mode .table-striped tbody tr:nth-of-type(odd) {
+  background-color: rgba(255, 255, 255, 0.025) !important;
+}
+
+/* ============================================
+   Form Controls
+   ============================================ */
+.dark-mode .form-control,
+.dark-mode .form-select {
+  background-color: #1b1b29 !important;
+  border-color: #323248 !important;
+  color: #cdcdde !important;
+}
+
+.dark-mode .form-control:focus,
+.dark-mode .form-select:focus {
+  border-color: #009ef7 !important;
+  box-shadow: 0 0 0 0.25rem rgba(0, 158, 247, 0.25) !important;
+}
+
+.dark-mode .form-control::placeholder {
+  color: #565674 !important;
+}
+
+.dark-mode .form-control-solid,
+.dark-mode .form-select-solid {
+  background-color: #1b1b29 !important;
+  border-color: transparent !important;
+}
+
+/* ============================================
+   Buttons
+   ============================================ */
+.dark-mode .btn-light {
+  background-color: #2b2b40 !important;
+  border-color: #2b2b40 !important;
+  color: #cdcdde !important;
+}
+
+.dark-mode .btn-light:hover {
+  background-color: #323248 !important;
+  border-color: #323248 !important;
+}
+
+.dark-mode .btn-bg-light {
+  background-color: #2b2b40 !important;
+}
+
+.dark-mode .btn-bg-light:hover {
+  background-color: #323248 !important;
+}
+
+.dark-mode .btn-active-light-primary:hover,
+.dark-mode .btn-active-light-primary.active {
+  background-color: rgba(0, 158, 247, 0.15) !important;
+}
+
+/* ============================================
+   Badges
+   ============================================ */
+.dark-mode .badge-light {
+  background-color: #2b2b40 !important;
+  color: #cdcdde !important;
+}
+
+.dark-mode .badge-light-dark {
+  background-color: #2b2b40 !important;
+  color: #cdcdde !important;
+}
+
+/* ============================================
+   Alerts
+   ============================================ */
+.dark-mode .alert {
+  border-color: #2b2b40 !important;
+}
+
+/* ============================================
+   Dropdowns
+   ============================================ */
+.dark-mode .dropdown-menu {
+  background-color: #1e1e2d !important;
+  border-color: #2b2b40 !important;
+  box-shadow: 0 0 50px 0 rgba(0, 0, 0, 0.4) !important;
+}
+
+.dark-mode .dropdown-item {
+  color: #cdcdde !important;
+}
+
+.dark-mode .dropdown-item:hover,
+.dark-mode .dropdown-item:focus {
+  background-color: #2b2b40 !important;
+}
+
+/* ============================================
+   Menu Styles
+   ============================================ */
+.dark-mode .menu-link {
+  color: #9899ac !important;
+}
+
+.dark-mode .menu-link:hover,
+.dark-mode .menu-link.active {
+  color: #ffffff !important;
+  background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+.dark-mode .app-header-menu .menu-link:hover,
+.dark-mode .app-header-menu .menu-link.active {
+  background-color: #2b2b40 !important;
+}
+
+/* ============================================
+   Symbols
+   ============================================ */
+.dark-mode .symbol-label {
+  background-color: #2b2b40 !important;
+}
+
+/* ============================================
+   Timeline
+   ============================================ */
+.dark-mode .timeline-line {
+  border-left-color: #2b2b40 !important;
+}
+
+/* ============================================
+   Breadcrumbs
+   ============================================ */
+.dark-mode .breadcrumb-item,
+.dark-mode .breadcrumb-item a {
+  color: #7e8299 !important;
+}
+
+.dark-mode .breadcrumb-item a:hover {
+  color: #009ef7 !important;
+}
+
+/* ============================================
+   Pagination
+   ============================================ */
+.dark-mode .pagination .page-link {
+  background-color: #1e1e2d !important;
+  border-color: #2b2b40 !important;
+  color: #cdcdde !important;
+}
+
+.dark-mode .pagination .page-link:hover {
+  background-color: #2b2b40 !important;
+}
+
+.dark-mode .pagination .page-item.active .page-link {
+  background-color: #009ef7 !important;
+  border-color: #009ef7 !important;
+  color: #ffffff !important;
+}
+
+.dark-mode .pagination .page-item.disabled .page-link {
+  background-color: #1b1b29 !important;
+  color: #565674 !important;
+}
+
+/* ============================================
+   Text Colors
+   ============================================ */
+.dark-mode .text-gray-900 {
+  color: #cdcdde !important;
+}
+
+.dark-mode .text-gray-800 {
+  color: #b5b5c3 !important;
+}
+
+.dark-mode .text-gray-700 {
+  color: #a1a5b7 !important;
+}
+
+.dark-mode .text-gray-600 {
+  color: #7e8299 !important;
+}
+
+.dark-mode .text-muted {
+  color: #7e8299 !important;
+}
+
+/* ============================================
+   Links
+   ============================================ */
+.dark-mode a {
+  color: #009ef7;
+}
+
+.dark-mode a:hover {
+  color: #0095e8;
+}
+
+.dark-mode .text-hover-primary:hover {
+  color: #009ef7 !important;
+}
+
+/* ============================================
+   Scrollbar (WebKit)
+   ============================================ */
+.dark-mode ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.dark-mode ::-webkit-scrollbar-track {
+  background: #1b1b29;
+}
+
+.dark-mode ::-webkit-scrollbar-thumb {
+  background: #323248;
+  border-radius: 4px;
+}
+
+.dark-mode ::-webkit-scrollbar-thumb:hover {
+  background: #3f3f58;
+}
+
+/* ============================================
+   Stat Cards (Dashboard)
+   ============================================ */
+.dark-mode .card[style*="background-color"] {
+  /* Preserve colored stat cards but darken slightly */
+  filter: brightness(0.9);
+}
+
+/* ============================================
+   Selection
+   ============================================ */
+.dark-mode ::selection {
+  background-color: rgba(0, 158, 247, 0.3);
+  color: #ffffff;
+}
+
+/* ============================================
+   Focus States
+   ============================================ */
+.dark-mode *:focus-visible {
+  outline-color: #009ef7 !important;
+}
+
+/* ============================================
+   Placeholder Images
+   ============================================ */
+.dark-mode .placeholder {
+  background-color: #323248 !important;
+}
+
+.dark-mode .placeholder-glow .placeholder {
+  animation: placeholder-glow 2s ease-in-out infinite;
+  background-color: #323248 !important;
+}

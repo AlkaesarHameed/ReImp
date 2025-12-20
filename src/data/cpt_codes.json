@@ -1,0 +1,436 @@
+{
+  "version": "2024",
+  "description": "CPT Procedure Codes (Current Procedural Terminology)",
+  "codes": {
+    "99213": {
+      "description": "Office or other outpatient visit, established patient, 20-29 minutes",
+      "category": "evaluation_management",
+      "type": "office_visit",
+      "requires_prior_auth": false,
+      "typical_time_minutes": 25,
+      "rvu": 1.30
+    },
+    "99214": {
+      "description": "Office or other outpatient visit, established patient, 30-39 minutes",
+      "category": "evaluation_management",
+      "type": "office_visit",
+      "requires_prior_auth": false,
+      "typical_time_minutes": 35,
+      "rvu": 1.92
+    },
+    "99215": {
+      "description": "Office or other outpatient visit, established patient, 40-54 minutes",
+      "category": "evaluation_management",
+      "type": "office_visit",
+      "requires_prior_auth": false,
+      "typical_time_minutes": 45,
+      "rvu": 2.80
+    },
+    "99203": {
+      "description": "Office or other outpatient visit, new patient, 30-44 minutes",
+      "category": "evaluation_management",
+      "type": "office_visit",
+      "requires_prior_auth": false,
+      "typical_time_minutes": 35,
+      "rvu": 1.60
+    },
+    "99204": {
+      "description": "Office or other outpatient visit, new patient, 45-59 minutes",
+      "category": "evaluation_management",
+      "type": "office_visit",
+      "requires_prior_auth": false,
+      "typical_time_minutes": 50,
+      "rvu": 2.60
+    },
+    "99205": {
+      "description": "Office or other outpatient visit, new patient, 60-74 minutes",
+      "category": "evaluation_management",
+      "type": "office_visit",
+      "requires_prior_auth": false,
+      "typical_time_minutes": 65,
+      "rvu": 3.50
+    },
+    "99385": {
+      "description": "Initial comprehensive preventive medicine evaluation, 18-39 years",
+      "category": "evaluation_management",
+      "type": "preventive",
+      "requires_prior_auth": false,
+      "age_range": [18, 39],
+      "rvu": 2.67
+    },
+    "99386": {
+      "description": "Initial comprehensive preventive medicine evaluation, 40-64 years",
+      "category": "evaluation_management",
+      "type": "preventive",
+      "requires_prior_auth": false,
+      "age_range": [40, 64],
+      "rvu": 3.00
+    },
+    "99387": {
+      "description": "Initial comprehensive preventive medicine evaluation, 65+ years",
+      "category": "evaluation_management",
+      "type": "preventive",
+      "requires_prior_auth": false,
+      "age_range": [65, 999],
+      "rvu": 3.33
+    },
+    "80053": {
+      "description": "Comprehensive metabolic panel",
+      "category": "laboratory",
+      "type": "chemistry",
+      "requires_prior_auth": false,
+      "rvu": 0.00
+    },
+    "80061": {
+      "description": "Lipid panel",
+      "category": "laboratory",
+      "type": "chemistry",
+      "requires_prior_auth": false,
+      "rvu": 0.00
+    },
+    "82947": {
+      "description": "Glucose; quantitative, blood",
+      "category": "laboratory",
+      "type": "chemistry",
+      "requires_prior_auth": false,
+      "rvu": 0.00
+    },
+    "83036": {
+      "description": "Hemoglobin A1C (glycated hemoglobin)",
+      "category": "laboratory",
+      "type": "chemistry",
+      "requires_prior_auth": false,
+      "rvu": 0.00
+    },
+    "82565": {
+      "description": "Creatinine; blood",
+      "category": "laboratory",
+      "type": "chemistry",
+      "requires_prior_auth": false,
+      "rvu": 0.00
+    },
+    "85025": {
+      "description": "Complete blood count (CBC) with automated differential",
+      "category": "laboratory",
+      "type": "hematology",
+      "requires_prior_auth": false,
+      "rvu": 0.00
+    },
+    "81001": {
+      "description": "Urinalysis, automated, with microscopy",
+      "category": "laboratory",
+      "type": "urinalysis",
+      "requires_prior_auth": false,
+      "rvu": 0.00
+    },
+    "87880": {
+      "description": "Streptococcus, group A, direct probe technique",
+      "category": "laboratory",
+      "type": "microbiology",
+      "requires_prior_auth": false,
+      "rvu": 0.00
+    },
+    "87070": {
+      "description": "Culture, bacterial; blood, aerobic",
+      "category": "laboratory",
+      "type": "microbiology",
+      "requires_prior_auth": false,
+      "rvu": 0.00
+    },
+    "87086": {
+      "description": "Culture, bacterial; urine, quantitative colony count",
+      "category": "laboratory",
+      "type": "microbiology",
+      "requires_prior_auth": false,
+      "rvu": 0.00
+    },
+    "36415": {
+      "description": "Venipuncture, routine",
+      "category": "laboratory",
+      "type": "collection",
+      "requires_prior_auth": false,
+      "rvu": 0.17
+    },
+    "93000": {
+      "description": "Electrocardiogram, routine ECG with at least 12 leads",
+      "category": "cardiology",
+      "type": "diagnostic",
+      "requires_prior_auth": false,
+      "rvu": 0.54
+    },
+    "93015": {
+      "description": "Cardiovascular stress test using maximal or submaximal treadmill",
+      "category": "cardiology",
+      "type": "diagnostic",
+      "requires_prior_auth": false,
+      "rvu": 1.54
+    },
+    "93306": {
+      "description": "Echocardiography, transthoracic, complete",
+      "category": "cardiology",
+      "type": "imaging",
+      "requires_prior_auth": true,
+      "rvu": 1.30
+    },
+    "71046": {
+      "description": "Radiologic examination, chest; 2 views",
+      "category": "radiology",
+      "type": "x-ray",
+      "requires_prior_auth": false,
+      "rvu": 0.22
+    },
+    "73560": {
+      "description": "Radiologic examination, knee; 1 or 2 views",
+      "category": "radiology",
+      "type": "x-ray",
+      "requires_prior_auth": false,
+      "rvu": 0.15
+    },
+    "73501": {
+      "description": "Radiologic examination, hip, unilateral; 1 view",
+      "category": "radiology",
+      "type": "x-ray",
+      "requires_prior_auth": false,
+      "rvu": 0.15
+    },
+    "70553": {
+      "description": "MRI brain with and without contrast",
+      "category": "radiology",
+      "type": "mri",
+      "requires_prior_auth": true,
+      "rvu": 2.28
+    },
+    "70552": {
+      "description": "MRI brain without contrast",
+      "category": "radiology",
+      "type": "mri",
+      "requires_prior_auth": true,
+      "rvu": 1.62
+    },
+    "72148": {
+      "description": "MRI lumbar spine without contrast",
+      "category": "radiology",
+      "type": "mri",
+      "requires_prior_auth": true,
+      "rvu": 1.50
+    },
+    "74176": {
+      "description": "CT abdomen and pelvis without contrast",
+      "category": "radiology",
+      "type": "ct",
+      "requires_prior_auth": true,
+      "rvu": 1.27
+    },
+    "77067": {
+      "description": "Screening mammography, bilateral",
+      "category": "radiology",
+      "type": "mammography",
+      "requires_prior_auth": false,
+      "gender_specific": "F",
+      "age_minimum": 40,
+      "rvu": 1.18
+    },
+    "76872": {
+      "description": "Ultrasound, transrectal",
+      "category": "radiology",
+      "type": "ultrasound",
+      "requires_prior_auth": false,
+      "gender_specific": "M",
+      "rvu": 1.47
+    },
+    "27447": {
+      "description": "Arthroplasty, knee, condyle and plateau; total knee replacement",
+      "category": "surgery",
+      "type": "orthopedic",
+      "requires_prior_auth": true,
+      "rvu": 20.74
+    },
+    "27130": {
+      "description": "Arthroplasty, acetabular and proximal femoral; total hip replacement",
+      "category": "surgery",
+      "type": "orthopedic",
+      "requires_prior_auth": true,
+      "rvu": 22.60
+    },
+    "63030": {
+      "description": "Laminotomy, with decompression of nerve root; lumbar",
+      "category": "surgery",
+      "type": "spine",
+      "requires_prior_auth": true,
+      "rvu": 14.35
+    },
+    "20610": {
+      "description": "Arthrocentesis, aspiration and/or injection; major joint",
+      "category": "surgery",
+      "type": "injection",
+      "requires_prior_auth": false,
+      "rvu": 0.97
+    },
+    "64483": {
+      "description": "Injection, anesthetic agent and/or steroid, transforaminal epidural; lumbar/sacral, single level",
+      "category": "surgery",
+      "type": "injection",
+      "requires_prior_auth": false,
+      "rvu": 3.13
+    },
+    "19301": {
+      "description": "Mastectomy, partial",
+      "category": "surgery",
+      "type": "breast",
+      "requires_prior_auth": true,
+      "gender_specific": "F",
+      "rvu": 10.97
+    },
+    "19120": {
+      "description": "Excision of cyst, fibroadenoma, or other benign tumor, breast",
+      "category": "surgery",
+      "type": "breast",
+      "requires_prior_auth": false,
+      "gender_specific": "F",
+      "rvu": 5.45
+    },
+    "47562": {
+      "description": "Laparoscopy, surgical; cholecystectomy",
+      "category": "surgery",
+      "type": "general",
+      "requires_prior_auth": true,
+      "rvu": 10.50
+    },
+    "55700": {
+      "description": "Biopsy, prostate; needle or punch",
+      "category": "surgery",
+      "type": "urology",
+      "requires_prior_auth": false,
+      "gender_specific": "M",
+      "rvu": 3.18
+    },
+    "84153": {
+      "description": "Prostate specific antigen (PSA); total",
+      "category": "laboratory",
+      "type": "chemistry",
+      "requires_prior_auth": false,
+      "gender_specific": "M",
+      "rvu": 0.00
+    },
+    "43239": {
+      "description": "Esophagogastroduodenoscopy with biopsy",
+      "category": "surgery",
+      "type": "endoscopy",
+      "requires_prior_auth": true,
+      "rvu": 4.05
+    },
+    "45378": {
+      "description": "Colonoscopy, diagnostic",
+      "category": "surgery",
+      "type": "endoscopy",
+      "requires_prior_auth": false,
+      "rvu": 4.42
+    },
+    "11102": {
+      "description": "Tangential biopsy of skin; single lesion",
+      "category": "surgery",
+      "type": "dermatology",
+      "requires_prior_auth": false,
+      "rvu": 0.81
+    },
+    "94010": {
+      "description": "Spirometry, including graphic record, total and timed vital capacity",
+      "category": "pulmonary",
+      "type": "diagnostic",
+      "requires_prior_auth": false,
+      "rvu": 0.35
+    },
+    "94060": {
+      "description": "Bronchodilation responsiveness, spirometry as above before and after bronchodilator",
+      "category": "pulmonary",
+      "type": "diagnostic",
+      "requires_prior_auth": false,
+      "rvu": 0.48
+    },
+    "91034": {
+      "description": "Esophagus, gastroesophageal reflux test; with nasal catheter pH electrode",
+      "category": "gastroenterology",
+      "type": "diagnostic",
+      "requires_prior_auth": false,
+      "rvu": 1.15
+    },
+    "97110": {
+      "description": "Therapeutic exercises, 15 minutes",
+      "category": "physical_therapy",
+      "type": "therapeutic",
+      "requires_prior_auth": false,
+      "rvu": 0.45
+    },
+    "95900": {
+      "description": "Nerve conduction, amplitude and latency/velocity study, each nerve; motor",
+      "category": "neurology",
+      "type": "diagnostic",
+      "requires_prior_auth": false,
+      "rvu": 0.51
+    },
+    "95903": {
+      "description": "Nerve conduction, amplitude and latency/velocity study, each nerve; sensory",
+      "category": "neurology",
+      "type": "diagnostic",
+      "requires_prior_auth": false,
+      "rvu": 0.46
+    },
+    "90834": {
+      "description": "Psychotherapy, 45 minutes",
+      "category": "psychiatry",
+      "type": "therapeutic",
+      "requires_prior_auth": false,
+      "typical_time_minutes": 45,
+      "rvu": 1.52
+    },
+    "90837": {
+      "description": "Psychotherapy, 60 minutes",
+      "category": "psychiatry",
+      "type": "therapeutic",
+      "requires_prior_auth": false,
+      "typical_time_minutes": 60,
+      "rvu": 2.23
+    },
+    "90471": {
+      "description": "Immunization administration, 1st or only component",
+      "category": "immunization",
+      "type": "administration",
+      "requires_prior_auth": false,
+      "rvu": 0.17
+    },
+    "90714": {
+      "description": "Tdap vaccine, preservative-free, intramuscular",
+      "category": "immunization",
+      "type": "vaccine",
+      "requires_prior_auth": false,
+      "rvu": 0.00
+    },
+    "90732": {
+      "description": "Pneumococcal polysaccharide vaccine, 23-valent",
+      "category": "immunization",
+      "type": "vaccine",
+      "requires_prior_auth": false,
+      "rvu": 0.00
+    },
+    "90658": {
+      "description": "Influenza virus vaccine, trivalent, split virus, intramuscular",
+      "category": "immunization",
+      "type": "vaccine",
+      "requires_prior_auth": false,
+      "rvu": 0.00
+    }
+  },
+  "category_descriptions": {
+    "evaluation_management": "Evaluation and Management Services",
+    "laboratory": "Laboratory/Pathology Services",
+    "cardiology": "Cardiovascular Services",
+    "radiology": "Radiology Services",
+    "surgery": "Surgical Services",
+    "pulmonary": "Pulmonary Services",
+    "gastroenterology": "Gastroenterology Services",
+    "physical_therapy": "Physical Medicine and Rehabilitation",
+    "neurology": "Neurology Services",
+    "psychiatry": "Psychiatry Services",
+    "immunization": "Immunization Services"
+  }
+}

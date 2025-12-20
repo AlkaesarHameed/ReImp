@@ -1,0 +1,1 @@
+var s={API:8002,FRONTEND:4200,STREAMLIT:8502,WEBSOCKET:8002};var l={production:!1,apiUrl:`http://localhost:${s.API}/api/v1`,wsUrl:`ws://localhost:${s.API}/ws`,sessionTimeout:15*60*1e3,enableAuditLogging:!0,logLevel:"debug",features:{enableWebSocket:!0,enableOfflineMode:!1,enableAnalytics:!1}};export{l as a};

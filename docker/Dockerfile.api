@@ -1,0 +1,86 @@
+# Python Project Starter - API Dockerfile
+# FastAPI + MCP Server + Celery Worker
+# Base: Python 3.12 (required for latest features)
+# Source: https://hub.docker.com/_/python
+# Verified: 2025-11-14
+
+# ==========================================================================
+# Stage 1: Builder
+# ==========================================================================
+FROM python:3.12-slim as builder
+
+# Set working directory
+WORKDIR /app
+
+# Install system dependencies for building Python packages
+# Source: Best practice for slim images
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libpq-dev \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Poetry
+# Source: https://python-poetry.org/docs/#installation
+# Version: 2.2.1 (Latest - Sep 2025)
+# Verified: 2025-11-14
+RUN pip install --no-cache-dir poetry==2.2.1
+
+# Copy dependency files
+COPY pyproject.toml poetry.lock* ./
+
+# Configure Poetry for Docker
+# No virtual env needed in container
+# Source: https://python-poetry.org/docs/configuration/
+ENV POETRY_NO_INTERACTION=1 \
+    POETRY_VIRTUALENVS_CREATE=false \
+    POETRY_CACHE_DIR=/tmp/poetry_cache
+
+# Install dependencies
+RUN poetry install --no-root --only main && rm -rf $POETRY_CACHE_DIR
+
+# ==========================================================================
+# Stage 2: Runtime
+# ==========================================================================
+FROM python:3.12-slim
+
+# Set working directory
+WORKDIR /app
+
+# Install runtime dependencies only
+RUN apt-get update && apt-get install -y \
+    libpq5 \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy Python packages from builder
+COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
+
+# Copy application code
+COPY src/ /app/src/
+COPY scripts/ /app/scripts/
+
+# Create upload directory
+RUN mkdir -p /app/uploads && chmod 755 /app/uploads
+
+# Copy and set entrypoint script
+COPY scripts/docker-entrypoint.sh /app/docker-entrypoint.sh
+RUN chmod +x /app/docker-entrypoint.sh
+
+# Create non-root user for security
+# Source: Docker security best practices
+# https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#user
+RUN useradd -m -u 1000 appuser && \
+    chown -R appuser:appuser /app
+
+USER appuser
+
+# Expose port
+EXPOSE 8000
+
+# Set entrypoint
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
+
+# Default command (can be overridden by docker-compose)
+CMD ["uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8000"]

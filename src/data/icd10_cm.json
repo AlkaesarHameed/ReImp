@@ -1,0 +1,223 @@
+{
+  "version": "2024",
+  "description": "ICD-10-CM Diagnosis Codes (US Clinical Modification)",
+  "codes": {
+    "E11.9": {
+      "description": "Type 2 diabetes mellitus without complications",
+      "category": "endocrine",
+      "chapter": "E",
+      "excludes1": ["E10.9"],
+      "common_procedures": ["82947", "83036", "99213", "99214"]
+    },
+    "E11.65": {
+      "description": "Type 2 diabetes mellitus with hyperglycemia",
+      "category": "endocrine",
+      "chapter": "E",
+      "common_procedures": ["82947", "83036", "80053"]
+    },
+    "E11.21": {
+      "description": "Type 2 diabetes mellitus with diabetic nephropathy",
+      "category": "endocrine",
+      "chapter": "E",
+      "common_procedures": ["82565", "81001", "80053"]
+    },
+    "E11.42": {
+      "description": "Type 2 diabetes mellitus with diabetic polyneuropathy",
+      "category": "endocrine",
+      "chapter": "E",
+      "common_procedures": ["95900", "95903", "99213"]
+    },
+    "I10": {
+      "description": "Essential (primary) hypertension",
+      "category": "circulatory",
+      "chapter": "I",
+      "common_procedures": ["93000", "80061", "80053", "99213"]
+    },
+    "I25.10": {
+      "description": "Atherosclerotic heart disease of native coronary artery without angina pectoris",
+      "category": "circulatory",
+      "chapter": "I",
+      "common_procedures": ["93000", "93015", "80061"]
+    },
+    "I50.9": {
+      "description": "Heart failure, unspecified",
+      "category": "circulatory",
+      "chapter": "I",
+      "common_procedures": ["93000", "93306", "71046"]
+    },
+    "J06.9": {
+      "description": "Acute upper respiratory infection, unspecified",
+      "category": "respiratory",
+      "chapter": "J",
+      "common_procedures": ["99213", "87880", "71046"]
+    },
+    "J18.9": {
+      "description": "Pneumonia, unspecified organism",
+      "category": "respiratory",
+      "chapter": "J",
+      "common_procedures": ["71046", "87070", "99213", "99214"]
+    },
+    "J45.909": {
+      "description": "Unspecified asthma, uncomplicated",
+      "category": "respiratory",
+      "chapter": "J",
+      "common_procedures": ["94010", "94060", "99213"]
+    },
+    "J44.9": {
+      "description": "Chronic obstructive pulmonary disease, unspecified",
+      "category": "respiratory",
+      "chapter": "J",
+      "common_procedures": ["94010", "94060", "71046", "99214"]
+    },
+    "M54.5": {
+      "description": "Low back pain",
+      "category": "musculoskeletal",
+      "chapter": "M",
+      "common_procedures": ["72148", "97110", "99213"]
+    },
+    "M79.3": {
+      "description": "Panniculitis, unspecified",
+      "category": "musculoskeletal",
+      "chapter": "M",
+      "common_procedures": ["99213", "11102"]
+    },
+    "M17.11": {
+      "description": "Primary osteoarthritis, right knee",
+      "category": "musculoskeletal",
+      "chapter": "M",
+      "common_procedures": ["27447", "73560", "20610", "99213"]
+    },
+    "M17.12": {
+      "description": "Primary osteoarthritis, left knee",
+      "category": "musculoskeletal",
+      "chapter": "M",
+      "common_procedures": ["27447", "73560", "20610", "99213"]
+    },
+    "M16.11": {
+      "description": "Primary osteoarthritis, right hip",
+      "category": "musculoskeletal",
+      "chapter": "M",
+      "common_procedures": ["27130", "73501", "20610"]
+    },
+    "M16.12": {
+      "description": "Primary osteoarthritis, left hip",
+      "category": "musculoskeletal",
+      "chapter": "M",
+      "common_procedures": ["27130", "73501", "20610"]
+    },
+    "K21.0": {
+      "description": "Gastro-esophageal reflux disease with esophagitis",
+      "category": "digestive",
+      "chapter": "K",
+      "common_procedures": ["43239", "91034", "99213"]
+    },
+    "K58.9": {
+      "description": "Irritable bowel syndrome without diarrhea",
+      "category": "digestive",
+      "chapter": "K",
+      "common_procedures": ["45378", "99213"]
+    },
+    "K80.20": {
+      "description": "Calculus of gallbladder without cholecystitis without obstruction",
+      "category": "digestive",
+      "chapter": "K",
+      "common_procedures": ["47562", "74176"]
+    },
+    "N18.3": {
+      "description": "Chronic kidney disease, stage 3 (moderate)",
+      "category": "genitourinary",
+      "chapter": "N",
+      "common_procedures": ["82565", "80053", "36415"]
+    },
+    "N39.0": {
+      "description": "Urinary tract infection, site not specified",
+      "category": "genitourinary",
+      "chapter": "N",
+      "common_procedures": ["81001", "87086", "99213"]
+    },
+    "G43.909": {
+      "description": "Migraine, unspecified, not intractable, without status migrainosus",
+      "category": "nervous",
+      "chapter": "G",
+      "common_procedures": ["70553", "99213"]
+    },
+    "G89.29": {
+      "description": "Other chronic pain",
+      "category": "nervous",
+      "chapter": "G",
+      "common_procedures": ["99213", "64483", "97110"]
+    },
+    "F32.9": {
+      "description": "Major depressive disorder, single episode, unspecified",
+      "category": "mental",
+      "chapter": "F",
+      "common_procedures": ["90834", "90837", "99213"]
+    },
+    "F41.1": {
+      "description": "Generalized anxiety disorder",
+      "category": "mental",
+      "chapter": "F",
+      "common_procedures": ["90834", "90837", "99213"]
+    },
+    "Z12.31": {
+      "description": "Encounter for screening mammogram for malignant neoplasm of breast",
+      "category": "factors",
+      "chapter": "Z",
+      "gender_specific": "F",
+      "common_procedures": ["77067"]
+    },
+    "Z00.00": {
+      "description": "Encounter for general adult medical examination without abnormal findings",
+      "category": "factors",
+      "chapter": "Z",
+      "common_procedures": ["99385", "99386", "99387", "80053"]
+    },
+    "Z23": {
+      "description": "Encounter for immunization",
+      "category": "factors",
+      "chapter": "Z",
+      "common_procedures": ["90471", "90714", "90732", "90658"]
+    },
+    "C50.911": {
+      "description": "Malignant neoplasm of unspecified site of right female breast",
+      "category": "neoplasm",
+      "chapter": "C",
+      "gender_specific": "F",
+      "common_procedures": ["19301", "19120", "77067"]
+    },
+    "C61": {
+      "description": "Malignant neoplasm of prostate",
+      "category": "neoplasm",
+      "chapter": "C",
+      "gender_specific": "M",
+      "common_procedures": ["84153", "55700", "76872"]
+    }
+  },
+  "chapter_descriptions": {
+    "A": "Certain infectious and parasitic diseases",
+    "B": "Certain infectious and parasitic diseases",
+    "C": "Neoplasms",
+    "D": "Diseases of blood and blood-forming organs",
+    "E": "Endocrine, nutritional and metabolic diseases",
+    "F": "Mental, behavioral and neurodevelopmental disorders",
+    "G": "Diseases of the nervous system",
+    "H": "Diseases of the eye and adnexa / ear and mastoid process",
+    "I": "Diseases of the circulatory system",
+    "J": "Diseases of the respiratory system",
+    "K": "Diseases of the digestive system",
+    "L": "Diseases of the skin and subcutaneous tissue",
+    "M": "Diseases of the musculoskeletal system and connective tissue",
+    "N": "Diseases of the genitourinary system",
+    "O": "Pregnancy, childbirth and the puerperium",
+    "P": "Certain conditions originating in the perinatal period",
+    "Q": "Congenital malformations, deformations and chromosomal abnormalities",
+    "R": "Symptoms, signs and abnormal clinical and laboratory findings",
+    "S": "Injury, poisoning and certain other consequences of external causes",
+    "T": "Injury, poisoning and certain other consequences of external causes",
+    "V": "External causes of morbidity",
+    "W": "External causes of morbidity",
+    "X": "External causes of morbidity",
+    "Y": "External causes of morbidity",
+    "Z": "Factors influencing health status and contact with health services"
+  }
+}

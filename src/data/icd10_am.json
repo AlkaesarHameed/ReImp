@@ -1,0 +1,118 @@
+{
+  "version": "12th Edition",
+  "description": "ICD-10-AM Australian Modification Diagnosis Codes",
+  "codes": {
+    "E11.9": {
+      "description": "Type 2 diabetes mellitus without complications",
+      "category": "endocrine",
+      "chapter": "E",
+      "common_procedures": ["66500-00", "66512-00", "105"]
+    },
+    "E11.65": {
+      "description": "Type 2 diabetes mellitus with hyperglycemia",
+      "category": "endocrine",
+      "chapter": "E",
+      "common_procedures": ["66500-00", "66512-00"]
+    },
+    "I10": {
+      "description": "Essential (primary) hypertension",
+      "category": "circulatory",
+      "chapter": "I",
+      "common_procedures": ["11700-00", "66500-00", "105"]
+    },
+    "I25.10": {
+      "description": "Atherosclerotic heart disease of native coronary artery",
+      "category": "circulatory",
+      "chapter": "I",
+      "common_procedures": ["11700-00", "38218-00"]
+    },
+    "J06.9": {
+      "description": "Acute upper respiratory infection, unspecified",
+      "category": "respiratory",
+      "chapter": "J",
+      "common_procedures": ["105", "69318-00"]
+    },
+    "J18.9": {
+      "description": "Pneumonia, unspecified organism",
+      "category": "respiratory",
+      "chapter": "J",
+      "common_procedures": ["58500-00", "69318-00", "105"]
+    },
+    "M54.5": {
+      "description": "Low back pain",
+      "category": "musculoskeletal",
+      "chapter": "M",
+      "common_procedures": ["63491-00", "105"]
+    },
+    "M17.1": {
+      "description": "Primary gonarthrosis, unilateral",
+      "category": "musculoskeletal",
+      "chapter": "M",
+      "common_procedures": ["49518-00", "57524-00"]
+    },
+    "M16.1": {
+      "description": "Primary coxarthrosis, unilateral",
+      "category": "musculoskeletal",
+      "chapter": "M",
+      "common_procedures": ["49318-00", "57524-00"]
+    },
+    "K21.0": {
+      "description": "Gastro-oesophageal reflux disease with oesophagitis",
+      "category": "digestive",
+      "chapter": "K",
+      "common_procedures": ["30473-01", "105"]
+    },
+    "K80.20": {
+      "description": "Calculus of gallbladder without cholecystitis",
+      "category": "digestive",
+      "chapter": "K",
+      "common_procedures": ["30445-00", "56307-00"]
+    },
+    "N39.0": {
+      "description": "Urinary tract infection, site not specified",
+      "category": "genitourinary",
+      "chapter": "N",
+      "common_procedures": ["73525-00", "69318-00", "105"]
+    },
+    "G43.9": {
+      "description": "Migraine, unspecified",
+      "category": "nervous",
+      "chapter": "G",
+      "common_procedures": ["63491-01", "105"]
+    },
+    "F32.9": {
+      "description": "Major depressive disorder, single episode, unspecified",
+      "category": "mental",
+      "chapter": "F",
+      "common_procedures": ["96080-00", "105"]
+    },
+    "Z12.31": {
+      "description": "Encounter for screening mammogram",
+      "category": "factors",
+      "chapter": "Z",
+      "gender_specific": "F",
+      "common_procedures": ["59300-00"]
+    },
+    "Z00.0": {
+      "description": "General examination and investigation of persons without complaint or reported diagnosis",
+      "category": "factors",
+      "chapter": "Z",
+      "common_procedures": ["105", "66500-00"]
+    },
+    "C50.9": {
+      "description": "Malignant neoplasm of breast, unspecified",
+      "category": "neoplasm",
+      "chapter": "C",
+      "gender_specific": "F",
+      "common_procedures": ["31500-00", "59300-00"]
+    },
+    "C61": {
+      "description": "Malignant neoplasm of prostate",
+      "category": "neoplasm",
+      "chapter": "C",
+      "gender_specific": "M",
+      "common_procedures": ["66659-00", "37219-00"]
+    }
+  },
+  "notes": "ICD-10-AM is the Australian Modification of ICD-10 used for morbidity classification in Australian hospitals"
+}

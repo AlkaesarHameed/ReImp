@@ -1,0 +1,22 @@
+# Grafana Datasource Provisioning
+# PostgreSQL datasource configuration
+# Source: https://grafana.com/docs/grafana/latest/administration/provisioning/#datasources
+# Verified: 2025-11-14
+
+apiVersion: 1
+
+datasources:
+  - name: PostgreSQL
+    type: postgres
+    access: proxy
+    url: db:5432
+    database: ${POSTGRES_DB}
+    user: ${POSTGRES_USER}
+    secureJsonData:
+      password: ${POSTGRES_PASSWORD}
+    jsonData:
+      sslmode: disable
+      postgresVersion: 1700 # PostgreSQL 17
+      timescaledb: true
+    isDefault: true
+    editable: true

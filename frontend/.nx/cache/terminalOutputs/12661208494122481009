@@ -1,0 +1,137 @@
+[33m❯[39m Building...
+[32m✔[39m Building...
+[37m[1mInitial chunk files[22m  [2m | [22m[1mNames[22m                       [2m | [22m [1mRaw size[22m[2m | [22m[1mEstimated transfer size[22m[39m
+[37m[32mstyles-ZZQSR7Q6.css[39m[37m  [2m | [22m[2mstyles[22m                      [2m | [22m  [36m2.17 MB[39m[37m[2m | [22m              [36m163.33 kB[39m[37m[39m
+[37m[32mchunk-UUFN4DK2.js[39m[37m    [2m | [22m[2m-[22m                           [2m | [22m[36m168.59 kB[39m[37m[2m | [22m               [36m49.45 kB[39m[37m[39m
+[37m[32mchunk-TD2OOY6M.js[39m[37m    [2m | [22m[2m-[22m                           [2m | [22m [36m78.00 kB[39m[37m[2m | [22m               [36m19.35 kB[39m[37m[39m
+[37m[32mchunk-2QNP6Q64.js[39m[37m    [2m | [22m[2m-[22m                           [2m | [22m [36m40.65 kB[39m[37m[2m | [22m               [36m11.45 kB[39m[37m[39m
+[37m[32mpolyfills-MI4BBBPK.js[39m[37m[2m | [22m[2mpolyfills[22m                   [2m | [22m [36m35.67 kB[39m[37m[2m | [22m               [36m11.53 kB[39m[37m[39m
+[37m[32mchunk-5QRQSYU5.js[39m[37m    [2m | [22m[2m-[22m                           [2m | [22m [36m33.12 kB[39m[37m[2m | [22m                [36m8.26 kB[39m[37m[39m
+[37m[32mchunk-R72WXHZK.js[39m[37m    [2m | [22m[2m-[22m                           [2m | [22m [36m32.06 kB[39m[37m[2m | [22m                [36m9.37 kB[39m[37m[39m
+[37m[32mchunk-VBPYTXU6.js[39m[37m    [2m | [22m[2m-[22m                           [2m | [22m [36m20.18 kB[39m[37m[2m | [22m                [36m5.16 kB[39m[37m[39m
+[37m[32mchunk-SILQIBBA.js[39m[37m    [2m | [22m[2m-[22m                           [2m | [22m [36m17.17 kB[39m[37m[2m | [22m                [36m4.55 kB[39m[37m[39m
+[37m[32mmain-UBKY4INA.js[39m[37m     [2m | [22m[2mmain[22m                        [2m | [22m [36m16.89 kB[39m[37m[2m | [22m                [36m5.39 kB[39m[37m[39m
+[37m[32mchunk-CMI2WP65.js[39m[37m    [2m | [22m[2m-[22m                           [2m | [22m [36m15.45 kB[39m[37m[2m | [22m                [36m4.35 kB[39m[37m[39m
+[37m[32mchunk-C73BGL6H.js[39m[37m    [2m | [22m[2m-[22m                           [2m | [22m [36m13.51 kB[39m[37m[2m | [39m[37m[22m                [36m3.76 kB[39m[37m[39m
+[37m[32mchunk-QJZJPKUU.js[39m[37m    [2m | [22m[2m-[22m                           [2m | [22m [36m12.96 kB[39m[37m[2m | [22m                [36m3.83 kB[39m[37m[39m
+[37m[32mchunk-RE5X3647.js[39m[37m    [2m | [22m[2m-[22m                           [2m | [22m  [36m5.92 kB[39m[37m[2m | [22m                [36m1.92 kB[39m[37m[39m
+[37m[32mchunk-ZURLY7IA.js[39m[37m    [2m | [22m[2m-[22m                           [2m | [22m  [36m5.08 kB[39m[37m[2m | [22m                [36m1.77 kB[39m[37m[39m
+[37m[32mchunk-OUDOF7NV.js[39m[37m    [2m | [22m[2m-[22m                           [2m | [22m  [36m4.63 kB[39m[37m[2m | [22m                [36m1.45 kB[39m[37m[39m
+[37m[32mchunk-F2X3VGZZ.js[39m[37m    [2m | [22m[2m-[22m                           [2m | [22m  [36m4.28 kB[39m[37m[2m | [22m                [36m1.10 kB[39m[37m[39m
+[37m[32mchunk-ZBXPEZGW.js[39m[37m    [2m | [22m[2m-[22m                           [2m | [22m  [36m3.89 kB[39m[37m[2m | [22m                [36m1.23 kB[39m[37m[39m
+[37m[32mchunk-E5KJRRTP.js[39m[37m    [2m | [22m[2m-[22m                           [2m | [22m  [36m3.01 kB[39m[37m[2m | [22m                [36m1.32 kB[39m[37m[39m
+[37m[32mchunk-2UYTTCDL.js[39m[37m    [2m | [22m[2m-[22m                           [2m | [22m  [36m2.66 kB[39m[37m[2m | [22m              [36m960 bytes[39m[37m[39m
+[37m[32mchunk-ZCMJ7UQL.js[39m[37m    [2m | [22m[2m-[22m                           [2m | [22m  [36m1.73 kB[39m[37m[2m | [22m              [36m831 bytes[39m[37m[39m
+[37m[32mchunk-XKZBSERL.js[39m[37m    [2m | [22m[2m-[22m                           [2m | [22m  [36m1.54 kB[39m[37m[2m | [22m              [36m775 bytes[39m[37m[39m
+[37m[32mchunk-4CLCTAJ7.js[39m[37m    [2m | [22m[2m-[22m                           [2m | [22m[36m830 bytes[39m[37m[2m | [22m              [36m830 bytes[39m[37m[39m
+[37m[32mchunk-QB55GBCV.js[39m[37m    [2m | [22m[2m-[22m                           [2m | [22m[36m310 bytes[39m[37m[2m | [22m              [36m310 bytes[39m[37m[39m
+[37m[32mchunk-GGQ7LRWG.js[39m[37m    [2m | [22m[2m-[22m                         [39m[37m  [2m | [22m  [36m0 bytes[39m[37m[2m | [22m                [36m0 bytes[39m[37m[39m
+[37m[39m
+[37m[1m [22m                    [2m | [22m[1mInitial total[22m               [2m | [22m  [1m2.68 MB[22m[2m | [22m              [1m312.28 kB[22m[39m
+[37m[39m
+[37m[1mLazy chunk files[22m     [2m | [22m[1mNames[22m                       [2m | [22m [1mRaw size[22m[2m | [22m[1mEstimated transfer size[22m[39m
+[37m[32mchunk-PK23XMUB.js[39m[37m    [2m | [22m[2m-[22m                           [2m | [22m[36m214.22 kB[39m[37m[2m | [22m               [36m41.43 kB[39m[37m[39m
+[37m[32mchunk-L56O5AUV.js[39m[37m    [2m | [22m[2m-[22m                           [2m | [22m[36m207.22 kB[39m[37m[2m | [22m               [36m62.04 kB[39m[37m[39m
+[37m[32mchunk-XPWDESDQ.js[39m[37m    [2m | [22m[2m-[22m                           [2m | [22m[36m119.54 kB[39m[37m[2m | [22m               [36m24.45 kB[39m[37m[39m
+[37m[32mchunk-JXBH64UV.js[39m[37m    [2m | [22m[2mclaim-submit-component[22m      [2m | [22m[36m100.75 kB[39m[37m[2m | [22m               [36m22.34 kB[39m[37m[39m
+[37m[32mchunk-72QQANLV.js[39m[37m    [2m | [22m[2mclaims-report-component[22m     [2m | [22m [36m78.16 kB[39m[37m[2m | [22m               [36m17.44 kB[39m[37m[39m
+[37m[32mchunk-RQMND6HD.js[39m[37m    [2m | [22m[2mbrowser[22m                     [2m | [22m [36m64.09 kB[39m[37m[2m | [22m               [36m17.14 kB[39m[37m[39m
+[37m[32mchunk-44AN4VJR.js[39m[37m    [2m | [22m[2meligibility-search-component[22m[2m | [22m [36m55.17 kB[39m[37m[2m | [22m               [36m12.96 kB[39m[37m[39m
+[37m[32mchunk-2AUTLCGR.js[39m[37m    [2m | [22m[2mllm-settings-component[22m      [2m | [22m [36m50.52 kB[39m[37m[2m | [22m               [36m11.79 kB[39m[37m[39m
+[37m[32mchunk-COAKLJSO.js[39m[37m    [2m | [22m[2m-[22m                           [2m | [22m [36m41.58 kB[39m[37m[2m | [22m                [36m8.72 kB[39m[37m[39m
+[37m[32mchunk-RXY2HGYZ.js[39m[37m    [2m | [22m[2mclassic-layout-component[22m    [2m | [22m [36m40.43 kB[39m[37m[2m | [22m                [36m9.31 kB[39m[37m[39m
+[37m[32mchunk-BY35NYVE.js[39m[37m    [2m | [2[39m[37m2m[2mclaim-review-component[22m      [2m | [22m [36m32.08 kB[39m[37m[2m | [22m                [36m7.84 kB[39m[37m[39m
+[37m[32mchunk-JXDOABLP.js[39m[37m    [2m | [22m[2mexamples-component[22m          [2m | [22m [36m25.34 kB[39m[37m[2m | [22m                [36m6.89 kB[39m[37m[39m
+[37m[32mchunk-DM6O2HNI.js[39m[37m    [2m | [22m[2mmembers-list-component[22m      [2m | [22m [36m23.89 kB[39m[37m[2m | [22m                [36m5.57 kB[39m[37m[39m
+[37m[32mchunk-J4H7OLFL.js[39m[37m    [2m | [22m[2mfinancial-report-component[22m  [2m | [22m [36m23.74 kB[39m[37m[2m | [22m                [36m6.01 kB[39m[37m[39m
+[37m[32mchunk-63OCLRFL.js[39m[37m    [2m | [22m[2musers-list-component[22m        [2m | [22m [36m23.60 kB[39m[37m[2m | [22m                [36m6.03 kB[39m[37m[39m
+[37m[2m...and 48 more lazy chunks files. Use "--verbose" to show all the files.[22m[39m
+[37m[39m
+[37mApplication bundle generation complete. [32.402 seconds][39m
+[37m[39m
+[1m[33m[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mTS-998113: PercentPipe is not used within the template of PoliciesListComponent[0m [1m[35m[plugin angular-compiler][0m[39m[22m
+[1m[33m[39m[22m
+[1m[33m    apps/claims-portal/src/app/features/admin/policies/policies-list.component.ts:62:4:[39m[22m
+[1m[33m[37m      62 │     [32mPercentPipe[37m,[39m[22m
+[1m[33m         ╵     [32m~~~~~~~~~~~[0m[39m[22m
+[1m[33m[39m[22m
+[1m[33m[39m[22m
+[1m[33m[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mTS-998113: StepPolicyDocsComponent is not used within the template of ClaimSubmitComponent[0m [1m[35m[plugin angular-compiler][0m[39m[22m
+[1m[33m[39m[22m
+[1m[33m    apps/claims-portal/src/app/features/claims/components/claim-submit/claim-submit.component.ts:65:4:[39m[22m
+[1m[33m[37m      65 │     [32mStepPolicyDocsComponent[37m,[39m[22m
+[1m[33m         ╵     [32m~~~~~~~~~~~~~~~~~~~~~~~[0m[39m[22m
+[1m[33m[39m[22m
+[1m[33m[39m[22m
+[1m[33m[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mTS-998113: DecimalPipe is not used within the template of DashboardOverviewComponent[0m [1m[35m[plugin angular-compiler][0m[39m[22m
+[1m[33m[39m[22m
+[1m[33m    apps/claims-portal/src/app/features/dashboard/components/dashboard-overview.component.ts:58:4:[39m[22m
+[1m[33m[37m      58 │     [32mDecimalPipe[37m,[39m[22m
+[1m[33m         ╵     [32m~~~~~~~~~~~[0m[39m[22m
+[1m[33m[39m[22m
+[1m[33m[39m[22m
+[1m[33m[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mTS-998113: CurrencyPipe is not used within the template of DashboardOverviewComponent[0m [1m[35m[plugin angular-compiler][0m[39m[22m
+[1m[33m[39m[22m
+[1m[33m    apps/claims-portal/src/app/features/dashboard/components/dashboard-overview.component.ts:59:4:[39m[22m
+[1m[33m[37m      59 │     [32mCurrencyPipe[37m,[39m[22m
+[1m[33m         ╵     [32m~~~~~~~~~~~~[0m[39m[22m
+[1m[33m[39m[22m
+[1m[33m[39m[22m
+[1m[33m[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mTS-998113: RouterLink is not used within the template of WorkflowGuideComponent[0m [1m[35m[plugin angular-compiler][0m[39m[22m
+[1m[33m[39m[22m
+[1m[33m    apps/claims-portal/src/app/features/help/components/workflow-guide.component.ts:25:4:[39m[22m
+[1m[33m[37m      25 │     [32mRouterLink[37m,[39m[22m
+[1m[33m         ╵     [32m~~~~~~~~~~[0m[39m[22m
+[1m[33m[39m[22m
+[1m[33m[39m[22m
+[1m[33m[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mTS-998113: CurrencyPipe is not used within the template of ReportsDashboardComponent[0m [1m[35m[plugin angular-compiler][0m[39m[22m
+[1m[33m[39m[22m
+[1m[33m    apps/claims-portal/src/[39m[22m[1m[33mapp/features/reports/components/reports-dashboard.component.ts:65:4:[39m[22m
+[1m[33m[37m      65 │     [32mCurrencyPipe[37m,[39m[22m
+[1m[33m         ╵     [32m~~~~~~~~~~~~[0m[39m[22m
+[1m[33m[39m[22m
+[1m[33m[39m[22m
+[1m[33m[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mTS-998113: DecimalPipe is not used within the template of ReportsDashboardComponent[0m [1m[35m[plugin angular-compiler][0m[39m[22m
+[1m[33m[39m[22m
+[1m[33m    apps/claims-portal/src/app/features/reports/components/reports-dashboard.component.ts:67:4:[39m[22m
+[1m[33m[37m      67 │     [32mDecimalPipe[37m,[39m[22m
+[1m[33m         ╵     [32m~~~~~~~~~~~[0m[39m[22m
+[1m[33m[39m[22m
+[1m[33m[39m[22m
+[1m[33m[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1m"@charset" must be the first rule in the file[0m [invalid-@charset][39m[22m
+[1m[33m[39m[22m
+[1m[33m    apps/claims-portal/src/assets/metronic-styles.css:9406:0:[39m[22m
+[1m[33m[37m      9406 │ [32m@charset[37m "UTF-8";/*![39m[22m
+[1m[33m           ╵ [32m~~~~~~~~[0m[39m[22m
+[1m[33m[39m[22m
+[1m[33m  This rule cannot come before a "@charset" rule[39m[22m
+[1m[33m[39m[22m
+[1m[33m    apps/claims-portal/src/assets/metronic-styles.css:6:0:[39m[22m
+[1m[33m[37m      6 │ [32m[37m@font-face {[39m[22m
+[1m[33m        ╵ [32m^[0m[39m[22m
+[1m[33m[39m[22m
+[1m[33m[39m[22m
+[1m[33m[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1m"@charset" must be the first rule in the file[0m [invalid-@charset][39m[22m
+[1m[33m[39m[22m
+[1m[33m    apps/claims-portal/src/assets/metronic-styles.css:23458:0:[39m[22m
+[1m[33m[37m      23458 │ [32m@charset[37m "UTF-8";[39m[22m
+[1m[33m            ╵ [32m~~~~~~~~[0m[39m[22m
+[1m[33m[39m[22m
+[1m[33m  This rule cannot come before a "@charset" rule[39m[22m
+[1m[33m[39m[22m
+[1m[33m    apps/claims-portal/src/assets/metronic-styles.css:6:0:[39m[22m
+[1m[33m[37m      6 │ [32m[37m@font-face {[39m[22m
+[1m[33m        ╵ [32m^[0m[39m[22m
+[1m[33m[39m[22m
+[1m[33m[39m[22m
+[1m[33m[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1m6 rules skipped due to selector errors:[39m[22m
+[1m[33m  .form-floating>~label -> Did not expect successive traversals.[39m[22m
+[1m[33m  .form-floating>~label -> Did not expect successive traversals.[39m[22m
+[1m[33m  .btn-group>+.btn -> Did not expect successive traversals.[39m[22m
+[1m[33m  .btn-group>+.btn -> Did not expect successive traversals.[39m[22m
+[1m[33m  .form-floating>~label -> Did not expect successive traversals.[39m[22m
+[1m[33m  .form-floating>~label -> Did not expect successive traversals.[0m[39m[22m
+[1m[33m[39m[22m
+[1m[33m[39m[22m
+[37mOutput location: C:\Users\alkae\OneDrive\Documents\AIWorks\Repos\AlkaesarHameed\ReImp\frontend\dist\apps\claims-portal[39m
+[37m[39m

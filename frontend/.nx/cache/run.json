@@ -1,0 +1,21 @@
+{
+  "run": {
+    "command": "nx build claims-portal --skip-nx-cache",
+    "startTime": "2025-12-19T18:48:18.237Z",
+    "endTime": "2025-12-19T18:49:00.494Z",
+    "inner": false
+  },
+  "tasks": [
+    {
+      "taskId": "claims-portal:build:production",
+      "target": "build",
+      "projectName": "claims-portal",
+      "hash": "12661208494122481009",
+      "startTime": "2025-12-19T18:48:18.275Z",
+      "endTime": "2025-12-19T18:48:59.800Z",
+      "params": "",
+      "cacheStatus": "cache-miss",
+      "status": 0
+    }
+  ]
+}

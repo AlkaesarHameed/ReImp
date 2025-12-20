@@ -1,0 +1,17 @@
+# Grafana Dashboard Provisioning
+# Auto-loads dashboards from JSON files
+# Source: https://grafana.com/docs/grafana/latest/administration/provisioning/#dashboards
+# Verified: 2025-11-14
+
+apiVersion: 1
+
+providers:
+  - name: "Default"
+    orgId: 1
+    folder: ""
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards

@@ -1,0 +1,63 @@
+{
+  "dashboard": {
+    "title": "System Metrics",
+    "tags": ["starter", "system"],
+    "timezone": "UTC",
+    "panels": [
+      {
+        "id": 1,
+        "title": "User Count",
+        "type": "stat",
+        "gridPos": { "h": 8, "w": 6, "x": 0, "y": 0 },
+        "targets": [
+          {
+            "datasource": { "type": "postgres", "uid": "${DS_POSTGRESQL}" },
+            "rawSql": "SELECT COUNT(*) as value FROM users",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Active Users",
+        "type": "stat",
+        "gridPos": { "h": 8, "w": 6, "x": 6, "y": 0 },
+        "targets": [
+          {
+            "datasource": { "type": "postgres", "uid": "${DS_POSTGRESQL}" },
+            "rawSql": "SELECT COUNT(*) as value FROM users WHERE is_active = true",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Document Count",
+        "type": "stat",
+        "gridPos": { "h": 8, "w": 6, "x": 12, "y": 0 },
+        "targets": [
+          {
+            "datasource": { "type": "postgres", "uid": "${DS_POSTGRESQL}" },
+            "rawSql": "SELECT COUNT(*) as value FROM documents",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "User Registrations Over Time",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 24, "x": 0, "y": 8 },
+        "targets": [
+          {
+            "datasource": { "type": "postgres", "uid": "${DS_POSTGRESQL}" },
+            "rawSql": "SELECT created_at as time, COUNT(*) as value FROM users GROUP BY created_at ORDER BY created_at",
+            "refId": "A"
+          }
+        ]
+      }
+    ],
+    "schemaVersion": 38,
+    "version": 1
+  }
+}

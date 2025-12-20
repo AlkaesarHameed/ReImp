@@ -1,0 +1,187 @@
+{
+  "version": "12th Edition",
+  "description": "ACHI Australian Classification of Health Interventions Procedure Codes",
+  "codes": {
+    "105": {
+      "description": "General practitioner consultation",
+      "category": "evaluation_management",
+      "type": "consultation",
+      "requires_prior_auth": false
+    },
+    "110": {
+      "description": "Specialist consultation",
+      "category": "evaluation_management",
+      "type": "consultation",
+      "requires_prior_auth": false
+    },
+    "66500-00": {
+      "description": "Comprehensive metabolic panel",
+      "category": "laboratory",
+      "type": "chemistry",
+      "requires_prior_auth": false
+    },
+    "66512-00": {
+      "description": "Glycosylated haemoglobin (HbA1c) test",
+      "category": "laboratory",
+      "type": "chemistry",
+      "requires_prior_auth": false
+    },
+    "66659-00": {
+      "description": "Prostate specific antigen (PSA)",
+      "category": "laboratory",
+      "type": "chemistry",
+      "requires_prior_auth": false,
+      "gender_specific": "M"
+    },
+    "73525-00": {
+      "description": "Urine microscopy, culture and sensitivity",
+      "category": "laboratory",
+      "type": "microbiology",
+      "requires_prior_auth": false
+    },
+    "69318-00": {
+      "description": "Blood culture",
+      "category": "laboratory",
+      "type": "microbiology",
+      "requires_prior_auth": false
+    },
+    "11700-00": {
+      "description": "Electrocardiogram (ECG), 12-lead",
+      "category": "cardiology",
+      "type": "diagnostic",
+      "requires_prior_auth": false
+    },
+    "38218-00": {
+      "description": "Exercise electrocardiography",
+      "category": "cardiology",
+      "type": "diagnostic",
+      "requires_prior_auth": false
+    },
+    "58500-00": {
+      "description": "Chest x-ray",
+      "category": "radiology",
+      "type": "x-ray",
+      "requires_prior_auth": false
+    },
+    "57524-00": {
+      "description": "X-ray of knee",
+      "category": "radiology",
+      "type": "x-ray",
+      "requires_prior_auth": false
+    },
+    "63491-00": {
+      "description": "MRI of spine, lumbar",
+      "category": "radiology",
+      "type": "mri",
+      "requires_prior_auth": true
+    },
+    "63491-01": {
+      "description": "MRI of brain",
+      "category": "radiology",
+      "type": "mri",
+      "requires_prior_auth": true
+    },
+    "56307-00": {
+      "description": "CT of abdomen",
+      "category": "radiology",
+      "type": "ct",
+      "requires_prior_auth": true
+    },
+    "59300-00": {
+      "description": "Mammography, bilateral",
+      "category": "radiology",
+      "type": "mammography",
+      "requires_prior_auth": false,
+      "gender_specific": "F",
+      "age_minimum": 40
+    },
+    "37219-00": {
+      "description": "Transrectal ultrasound of prostate",
+      "category": "radiology",
+      "type": "ultrasound",
+      "requires_prior_auth": false,
+      "gender_specific": "M"
+    },
+    "49518-00": {
+      "description": "Total knee replacement, unilateral",
+      "category": "surgery",
+      "type": "orthopedic",
+      "requires_prior_auth": true
+    },
+    "49318-00": {
+      "description": "Total hip replacement, unilateral",
+      "category": "surgery",
+      "type": "orthopedic",
+      "requires_prior_auth": true
+    },
+    "48639-00": {
+      "description": "Lumbar laminectomy",
+      "category": "surgery",
+      "type": "spine",
+      "requires_prior_auth": true
+    },
+    "50124-00": {
+      "description": "Injection of joint",
+      "category": "surgery",
+      "type": "injection",
+      "requires_prior_auth": false
+    },
+    "31500-00": {
+      "description": "Partial mastectomy",
+      "category": "surgery",
+      "type": "breast",
+      "requires_prior_auth": true,
+      "gender_specific": "F"
+    },
+    "30445-00": {
+      "description": "Laparoscopic cholecystectomy",
+      "category": "surgery",
+      "type": "general",
+      "requires_prior_auth": true
+    },
+    "37224-00": {
+      "description": "Prostate biopsy, needle",
+      "category": "surgery",
+      "type": "urology",
+      "requires_prior_auth": false,
+      "gender_specific": "M"
+    },
+    "30473-01": {
+      "description": "Gastroscopy with biopsy",
+      "category": "surgery",
+      "type": "endoscopy",
+      "requires_prior_auth": true
+    },
+    "32090-00": {
+      "description": "Colonoscopy, diagnostic",
+      "category": "surgery",
+      "type": "endoscopy",
+      "requires_prior_auth": false
+    },
+    "30216-00": {
+      "description": "Skin biopsy",
+      "category": "surgery",
+      "type": "dermatology",
+      "requires_prior_auth": false
+    },
+    "11503-00": {
+      "description": "Spirometry",
+      "category": "pulmonary",
+      "type": "diagnostic",
+      "requires_prior_auth": false
+    },
+    "96080-00": {
+      "description": "Psychotherapy session",
+      "category": "psychiatry",
+      "type": "therapeutic",
+      "requires_prior_auth": false
+    },
+    "96020-00": {
+      "description": "Physiotherapy treatment",
+      "category": "physical_therapy",
+      "type": "therapeutic",
+      "requires_prior_auth": false
+    }
+  },
+  "notes": "ACHI is the Australian Classification of Health Interventions used for procedure classification in Australian hospitals"
+}

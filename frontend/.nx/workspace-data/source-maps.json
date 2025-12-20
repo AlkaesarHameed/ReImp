@@ -1,0 +1,288 @@
+{
+  "apps/claims-portal": {
+    "root": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "name": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "$schema": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "projectType": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "prefix": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "sourceRoot": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "tags": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "tags.type:app": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "tags.scope:claims": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "targets": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.executor": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.outputs": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.configurations": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.defaultConfiguration": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options.outputPath": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options.index": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options.browser": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options.polyfills": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options.tsConfig": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options.inlineStyleLanguage": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options.assets": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options.styles": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options.scripts": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.configurations.production": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.configurations.production.budgets": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.configurations.production.outputHashing": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.configurations.production.optimization": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.configurations.production.sourceMap": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.configurations.production.namedChunks": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.configurations.production.extractLicenses": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.configurations.development": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.configurations.development.optimization": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.configurations.development.extractLicenses": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.configurations.development.sourceMap": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.serve": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.serve.executor": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.serve.configurations": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.serve.defaultConfiguration": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.serve.options": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.serve.options.port": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.serve.options.proxyConfig": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.serve.configurations.production": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.serve.configurations.production.buildTarget": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.serve.configurations.development": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.serve.configurations.development.buildTarget": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test.executor": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test.outputs": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test.options": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test.configurations": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test.options.jestConfig": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test.options.passWithNoTests": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test.configurations.ci": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test.configurations.ci.ci": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test.configurations.ci.codeCoverage": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lint": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lint.executor": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lint.options": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.lint.options.lintFilePatterns": [
+      "apps/claims-portal/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.dependsOn": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.build.inputs": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.build.cache": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.build.parallelism": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.test.inputs": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.test.cache": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.test.parallelism": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.lint.inputs": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.lint.cache": [
+      "nx.json",
+      "nx/target-defaults"
+    ],
+    "targets.lint.parallelism": [
+      "nx.json",
+      "nx/target-defaults"
+    ]
+  }
+}
