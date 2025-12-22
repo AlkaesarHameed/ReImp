@@ -37,9 +37,10 @@ import {
 } from '@claims-processing/models';
 import { InterfaceSwitcherService } from '../../../../core/services/interface-switcher.service';
 
-import { StepPolicyDocsComponent, PolicyDocsStepData } from './step-policy-docs/step-policy-docs.component';
+import { PolicyDocsStepData } from './step-policy-docs/step-policy-docs.component';
 import { StepClaimDocsComponent, ClaimDocsStepData } from './step-claim-docs/step-claim-docs.component';
 import { StepProcessingComponent, ProcessingStepData } from './step-processing/step-processing.component';
+import { StepPreviewExtractionComponent } from './step-preview-extraction/step-preview-extraction.component';
 import { StepReviewComponent } from './step-review/step-review.component';
 
 /**
@@ -62,9 +63,9 @@ interface EnhancedClaimFormState extends ClaimFormState {
     ButtonModule,
     ConfirmDialogModule,
     ToastModule,
-    StepPolicyDocsComponent,
     StepClaimDocsComponent,
     StepProcessingComponent,
+    StepPreviewExtractionComponent,
     StepReviewComponent,
   ],
   providers: [ConfirmationService, MessageService],
@@ -95,7 +96,8 @@ interface EnhancedClaimFormState extends ClaimFormState {
         styleClass="wizard-steps"
       ></p-steps>
 
-      <!-- Step Content - New 4-step streamlined flow -->
+      <!-- Step Content - New 5-step flow with Preview step -->
+      <!-- Source: Design Doc 08 - Document Extraction Preview Step -->
       <div class="wizard-content">
         @switch (currentStep()) {
           @case (0) {
@@ -117,7 +119,17 @@ interface EnhancedClaimFormState extends ClaimFormState {
             />
           }
           @case (2) {
-            <!-- Step 3: Review Data - Edit auto-populated fields (member, provider, services all in one) -->
+            <!-- Step 3: Preview Extraction - Read-only view of extracted data -->
+            <app-step-preview-extraction
+              [mergedExtractedData]="enhancedFormState().mergedExtractedData"
+              [policyDocuments]="enhancedFormState().policyDocuments"
+              [claimDocuments]="enhancedFormState().claimDocuments"
+              (stepComplete)="onPreviewComplete()"
+              (stepBack)="goBack()"
+            />
+          }
+          @case (3) {
+            <!-- Step 4: Review Data - Edit auto-populated fields (member, provider, services all in one) -->
             <app-step-review
               [formState]="formState()"
               [enhancedFormState]="enhancedFormState()"
@@ -128,8 +140,8 @@ interface EnhancedClaimFormState extends ClaimFormState {
               (proceedToSubmit)="onProceedToSubmit()"
             />
           }
-          @case (3) {
-            <!-- Step 4: Submit - Confirmation and final submission -->
+          @case (4) {
+            <!-- Step 5: Submit - Confirmation and final submission -->
             <app-step-review
               [formState]="formState()"
               [enhancedFormState]="enhancedFormState()"
@@ -217,19 +229,20 @@ export class ClaimSubmitComponent implements OnInit, OnDestroy {
   private readonly destroy$ = new Subject<void>();
 
   /**
-   * Streamlined 4-step wizard flow:
+   * 5-step wizard flow with Preview step:
    * 1. Upload Documents - Start with document upload (medical records, invoices)
    * 2. Processing - Auto-extract patient, provider, diagnoses, services
-   * 3. Review Data - Show all auto-populated data, allow edits
-   * 4. Confirm - Final review and submission
+   * 3. Preview Extraction - Read-only view of extracted data with confidence scores
+   * 4. Review Data - Show all auto-populated data, allow edits
+   * 5. Confirm - Final review and submission
    *
-   * This flow prioritizes document-first approach where patient demographics,
-   * services, and diagnoses are auto-populated from document extraction.
-   * Member and provider network data are optional and can be linked later.
+   * Source: Design Doc 08 - Document Extraction Preview Step
+   * The Preview step allows users to review extraction accuracy before editing.
    */
   readonly steps: MenuItem[] = [
     { label: 'Upload Documents', icon: 'pi pi-upload' },
     { label: 'Processing', icon: 'pi pi-cog' },
+    { label: 'Preview Extraction', icon: 'pi pi-eye' },
     { label: 'Review Data', icon: 'pi pi-pencil' },
     { label: 'Submit', icon: 'pi pi-check-square' },
   ];
@@ -349,11 +362,20 @@ export class ClaimSubmitComponent implements OnInit, OnDestroy {
     }));
 
     this.completedSteps.update(set => new Set([...set, 1]));
-    this.currentStep.set(2); // Go to Review Data
+    this.currentStep.set(2); // Go to Preview Extraction
   }
 
   /**
-   * Step 2: Data updated in review step.
+   * Step 2: Preview complete - proceed to review.
+   * Source: Design Doc 08 - Preview step is read-only.
+   */
+  onPreviewComplete(): void {
+    this.completedSteps.update(set => new Set([...set, 2]));
+    this.currentStep.set(3); // Go to Review Data
+  }
+
+  /**
+   * Step 3: Data updated in review step.
    * User can edit any auto-populated fields here.
    */
   onDataUpdated(data: {
@@ -376,11 +398,11 @@ export class ClaimSubmitComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Step 2 -> Step 3: User confirmed review data, proceed to final submission.
+   * Step 3 -> Step 4: User confirmed review data, proceed to final submission.
    */
   onProceedToSubmit(): void {
-    this.completedSteps.update(set => new Set([...set, 2]));
-    this.currentStep.set(3); // Go to Submit
+    this.completedSteps.update(set => new Set([...set, 3]));
+    this.currentStep.set(4); // Go to Submit
   }
 
   // Legacy handlers kept for backward compatibility

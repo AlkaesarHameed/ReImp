@@ -52,11 +52,11 @@ class ClaimsSettings(BaseSettings):
     # LLM Provider Configuration
     # =========================================================================
     LLM_PRIMARY_PROVIDER: LLMProvider = Field(
-        default=LLMProvider.OLLAMA,
+        default=LLMProvider.OPENAI,
         description="Primary LLM provider for document parsing",
     )
     LLM_FALLBACK_PROVIDER: Optional[LLMProvider] = Field(
-        default=LLMProvider.OPENAI,
+        default=LLMProvider.OLLAMA,
         description="Fallback LLM provider when primary fails or low confidence",
     )
     LLM_CONFIDENCE_THRESHOLD: float = Field(
@@ -76,22 +76,42 @@ class ClaimsSettings(BaseSettings):
         description="Ollama API base URL",
     )
     OLLAMA_MODEL: str = Field(
-        default="qwen2.5-vl:7b",
+        default="llama3.2",
         description="Ollama model for vision/document tasks",
     )
     OLLAMA_MEDICAL_MODEL: str = Field(
-        default="biomistral:7b",
+        default="llama3.2",
         description="Ollama model for medical NLP tasks",
     )
 
-    # OpenAI-specific settings (for fallback)
+    # OpenAI-specific settings (primary provider)
     OPENAI_API_KEY: Optional[str] = Field(
         default=None,
-        description="OpenAI API key for GPT-4 Vision fallback",
+        description="OpenAI API key for GPT models",
     )
     OPENAI_MODEL: str = Field(
-        default="gpt-4-vision-preview",
-        description="OpenAI model for vision tasks",
+        default="gpt-4o",
+        description="OpenAI model for document parsing",
+    )
+
+    # Anthropic-specific settings (for Claude)
+    ANTHROPIC_API_KEY: Optional[str] = Field(
+        default=None,
+        description="Anthropic API key for Claude",
+    )
+
+    # Azure OpenAI-specific settings
+    AZURE_OPENAI_API_KEY: Optional[str] = Field(
+        default=None,
+        description="Azure OpenAI API key",
+    )
+    AZURE_OPENAI_ENDPOINT: Optional[str] = Field(
+        default=None,
+        description="Azure OpenAI endpoint URL",
+    )
+    AZURE_OPENAI_API_VERSION: str = Field(
+        default="2024-02-15-preview",
+        description="Azure OpenAI API version",
     )
 
     # =========================================================================
@@ -99,10 +119,10 @@ class ClaimsSettings(BaseSettings):
     # =========================================================================
     OCR_PRIMARY_PROVIDER: OCRProvider = Field(
         default=OCRProvider.PADDLEOCR,
-        description="Primary OCR provider",
+        description="Primary OCR provider (uses HTTP service when library unavailable)",
     )
     OCR_FALLBACK_PROVIDER: Optional[OCRProvider] = Field(
-        default=OCRProvider.AZURE_DI,
+        default=OCRProvider.TESSERACT,
         description="Fallback OCR provider",
     )
     OCR_CONFIDENCE_THRESHOLD: float = Field(
@@ -124,6 +144,10 @@ class ClaimsSettings(BaseSettings):
     PADDLEOCR_USE_GPU: bool = Field(
         default=True,
         description="Use GPU acceleration for PaddleOCR",
+    )
+    PADDLEOCR_HTTP_URL: Optional[str] = Field(
+        default="http://localhost:9091",
+        description="PaddleOCR HTTP service URL (used when library not installed)",
     )
 
     # Azure Document Intelligence settings
@@ -194,6 +218,22 @@ class ClaimsSettings(BaseSettings):
     MEDICAL_NLP_FALLBACK_PROVIDER: Optional[MedicalNLPProvider] = Field(
         default=MedicalNLPProvider.MEDSPACY,
         description="Fallback medical NLP provider (non-UMLS)",
+    )
+
+    # Medical NLP fallback settings
+    MEDICAL_NLP_FALLBACK_ON_ERROR: bool = Field(
+        default=True,
+        description="Automatically fallback on Medical NLP error",
+    )
+    MEDICAL_NLP_TIMEOUT_SECONDS: int = Field(
+        default=30,
+        description="Maximum time for Medical NLP processing",
+    )
+    MEDICAL_NLP_CONFIDENCE_THRESHOLD: float = Field(
+        default=0.85,
+        ge=0.0,
+        le=1.0,
+        description="Minimum confidence for Medical NLP results",
     )
 
     # MedCAT settings
@@ -272,8 +312,8 @@ class ClaimsSettings(BaseSettings):
         description="Maximum time for OCR per page",
     )
     LLM_TIMEOUT_SECONDS: int = Field(
-        default=60,
-        description="Maximum time for LLM processing",
+        default=300,
+        description="Maximum time for LLM processing (5 minutes for vision models)",
     )
 
     # =========================================================================

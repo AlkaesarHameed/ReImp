@@ -39,7 +39,20 @@ import {
   getRoleLabel,
   getStatusSeverity,
 } from '@claims-processing/models';
+
 import { UsersStore } from '@claims-processing/data-access';
+
+/**
+ * Extended form data type to include status for edit mode.
+ */
+interface UserFormData {
+  email: string;
+  password: string;
+  first_name: string;
+  last_name: string;
+  role: UserRole;
+  status?: UserStatus;
+}
 
 @Component({
   selector: 'app-users-list',
@@ -594,7 +607,7 @@ export class UsersListComponent implements OnInit {
   selectedUser = signal<User | null>(null);
 
   // Form data
-  formData: UserCreate = this.getEmptyFormData();
+  formData: UserFormData = this.getEmptyFormData();
 
   // Dropdown options
   statusOptions = [

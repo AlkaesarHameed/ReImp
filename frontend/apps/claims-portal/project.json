@@ -16,10 +16,7 @@
         "polyfills": ["zone.js"],
         "tsConfig": "apps/claims-portal/tsconfig.app.json",
         "inlineStyleLanguage": "scss",
-        "assets": [
-          "apps/claims-portal/src/favicon.ico",
-          "apps/claims-portal/src/assets"
-        ],
+        "assets": ["apps/claims-portal/src/favicon.ico", "apps/claims-portal/src/assets"],
         "styles": [
           "apps/claims-portal/src/assets/metronic-styles.css",
           "apps/claims-portal/src/assets/dark-theme.css",
@@ -95,10 +92,7 @@
     "lint": {
       "executor": "@nx/eslint:lint",
       "options": {
-        "lintFilePatterns": [
-          "apps/claims-portal/**/*.ts",
-          "apps/claims-portal/**/*.html"
-        ]
+        "lintFilePatterns": ["apps/claims-portal/**/*.ts", "apps/claims-portal/**/*.html"]
       }
     }
   }

@@ -162,7 +162,7 @@ class LLMParserConfig:
     fallback_provider: Optional[LLMProvider] = LLMProvider.OPENAI
     confidence_threshold: float = 0.85
     fallback_on_low_confidence: bool = True
-    timeout_seconds: int = 60
+    timeout_seconds: int = 300  # Increased to 5 minutes for vision models
     max_retries: int = 2
     extract_medical_codes: bool = True
 
@@ -180,8 +180,8 @@ Extract the following fields and return as JSON:
 1. patient_info: name, member_id, date_of_birth (YYYY-MM-DD), gender, address
 2. provider_info: name, npi (10 digits), tax_id, address, phone, specialty
 3. billing_provider: same fields as provider if different
-4. diagnoses: array of {code, description, is_primary}
-5. procedures: array of {code, description, modifiers[], quantity, charged_amount, service_date}
+4. diagnoses: array of {{code, description, is_primary}}
+5. procedures: array of {{code, description, modifiers[], quantity, charged_amount, service_date}}
 6. financial: total_charged, currency
 7. dates: service_date_from, service_date_to, admission_date, discharge_date
 8. identifiers: claim_number, prior_auth_number, policy_number, group_number
@@ -213,7 +213,7 @@ Return JSON with:
 1. invoice_number
 2. invoice_date
 3. vendor_info: name, address, tax_id
-4. line_items: array of {description, quantity, unit_price, total}
+4. line_items: array of {{description, quantity, unit_price, total}}
 5. totals: subtotal, tax, total_amount, currency
 6. payment_terms
 
@@ -261,11 +261,8 @@ class LLMParserService:
             try:
                 from src.gateways.llm_gateway import LLMGateway
 
-                self._llm_gateway = LLMGateway(
-                    primary_provider=self.config.primary_provider,
-                    fallback_provider=self.config.fallback_provider,
-                    confidence_threshold=self.config.confidence_threshold,
-                )
+                # Use default gateway config from settings (or pass custom GatewayConfig)
+                self._llm_gateway = LLMGateway()
                 await self._llm_gateway.initialize()
                 logger.info("LLM gateway initialized for parser")
             except ImportError:
@@ -320,6 +317,7 @@ class LLMParserService:
             )
 
             # Call LLM
+            print(f"[PARSER DEBUG] Calling LLM with image_data={image_data is not None}, ocr_text_len={len(ocr_text)}", flush=True)
             llm_result = await self._call_llm(prompt, image_data)
 
             if not llm_result.get("success"):
@@ -371,13 +369,22 @@ class LLMParserService:
 
             from src.gateways.llm_gateway import LLMRequest
 
-            request = LLMRequest(
-                prompt=prompt,
-                system_prompt="You are a medical document extraction expert. Return only valid JSON.",
-                image_data=image_data,
-                max_tokens=4000,
-                temperature=0.1,  # Low temperature for consistent extraction
-            )
+            # Create request using appropriate factory method
+            system_prompt = "You are a medical document extraction expert. Return only valid JSON."
+            if image_data:
+                request = LLMRequest.with_image(
+                    prompt=prompt,
+                    image_data=image_data,
+                    system_prompt=system_prompt,
+                )
+            else:
+                request = LLMRequest.simple(
+                    prompt=prompt,
+                    system_prompt=system_prompt,
+                )
+            # Override settings for extraction
+            request.max_tokens = 4000
+            request.temperature = 0.1  # Low temperature for consistent extraction
 
             result = await asyncio.wait_for(
                 self._llm_gateway.execute(request),
@@ -472,25 +479,33 @@ class LLMParserService:
             result.fields_extracted += 1
 
         # Extract diagnoses
-        for dx in extracted.get("diagnoses", []):
-            result.diagnoses.append(ExtractedDiagnosis(
-                code=dx.get("code", ""),
-                description=dx.get("description", ""),
-                code_system=DiagnosisCodeSystem.ICD10_CM,
-                is_primary=dx.get("is_primary", False),
-                confidence=float(dx.get("confidence", 0.8)),
-            ))
-            result.fields_extracted += 1
+        diagnoses_data = extracted.get("diagnoses", [])
+        if isinstance(diagnoses_data, list):
+            for dx in diagnoses_data:
+                if isinstance(dx, dict):
+                    result.diagnoses.append(ExtractedDiagnosis(
+                        code=dx.get("code", ""),
+                        description=dx.get("description", ""),
+                        code_system=DiagnosisCodeSystem.ICD10_CM,
+                        is_primary=dx.get("is_primary", False),
+                        confidence=float(dx.get("confidence", 0.8)),
+                    ))
+                    result.fields_extracted += 1
 
         # Extract procedures
-        for proc in extracted.get("procedures", []):
+        procedures_data = extracted.get("procedures", [])
+        if not isinstance(procedures_data, list):
+            procedures_data = []
+        for proc in procedures_data:
+            if not isinstance(proc, dict):
+                continue
             charged = proc.get("charged_amount")
             result.procedures.append(ExtractedProcedure(
                 code=proc.get("code", ""),
                 description=proc.get("description", ""),
                 code_system=ProcedureCodeSystem.CPT,
                 modifiers=proc.get("modifiers", []),
-                quantity=int(proc.get("quantity", 1)),
+                quantity=int(proc.get("quantity", 1) or 1),
                 charged_amount=Decimal(str(charged)) if charged else None,
                 service_date=self._parse_date(proc.get("service_date")),
                 confidence=float(proc.get("confidence", 0.8)),
@@ -524,7 +539,7 @@ class LLMParserService:
         result.facility_name = pos.get("facility_name", "")
 
         # Determine claim type
-        claim_type_str = extracted.get("claim_type", "").lower()
+        claim_type_str = (extracted.get("claim_type") or "").lower()
         if "professional" in claim_type_str or "cms-1500" in claim_type_str:
             result.claim_type = ClaimType.PROFESSIONAL
         elif "institutional" in claim_type_str or "ub-04" in claim_type_str:

@@ -4,10 +4,12 @@
  *
  * Adds authentication credentials and CSRF token to requests.
  * Uses HttpOnly cookies for JWT (no localStorage for security).
+ * In development mode, adds X-Dev-User header for mock authentication.
  */
 import { HttpInterceptorFn, HttpRequest, HttpHandlerFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { AuthService } from '../services/auth.service';
+import { environment } from '../../../environments/environment';
 
 /**
  * Get CSRF token from cookie.
@@ -39,6 +41,14 @@ export const authInterceptor: HttpInterceptorFn = (
 
   if (csrfToken) {
     headers = headers.set('X-CSRF-Token', csrfToken);
+  }
+
+  // Development mode: Add mock auth header if user is logged in via mock auth
+  if (!environment.production) {
+    const user = authService.user();
+    if (user) {
+      headers = headers.set('X-Dev-User', user.username);
+    }
   }
 
   const authReq = req.clone({

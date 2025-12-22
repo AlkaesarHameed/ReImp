@@ -100,6 +100,48 @@ class TenantContextMiddleware(BaseHTTPMiddleware):
         if any(request.url.path.startswith(path) for path in self.exclude_paths):
             return await call_next(request)
 
+        settings = get_settings()
+
+        # Development mode: Accept X-Dev-User header for mock authentication
+        if settings.ENVIRONMENT == "development":
+            dev_user = request.headers.get("X-Dev-User")
+            if dev_user:
+                logger.debug(f"Development mode: Setting tenant context for dev user '{dev_user}'")
+                set_tenant_context(
+                    tenant_id="dev-tenant-001",
+                    user_id=f"dev-{dev_user}",
+                    permissions=[
+                        "claims:read", "claims:write", "claims:create", "claims:update", "claims:approve",
+                        "documents:read", "documents:write", "documents:upload", "documents:delete",
+                        "admin:users", "admin:settings", "admin:access",
+                        "reports:view", "reports:export",
+                        "eligibility:check", "eligibility:batch",
+                    ],
+                    roles=["administrator"],
+                )
+                # Store mock claims in request state
+                request.state.token_claims = TokenClaims(
+                    sub=f"dev-{dev_user}",
+                    tenant_id="dev-tenant-001",
+                    tenant_slug="development",
+                    roles=["administrator"],
+                    permissions=[
+                        "claims:read", "claims:write", "claims:create", "claims:update", "claims:approve",
+                        "documents:read", "documents:write", "documents:upload", "documents:delete",
+                        "admin:users", "admin:settings", "admin:access",
+                        "reports:view", "reports:export",
+                        "eligibility:check", "eligibility:batch",
+                    ],
+                    provider_preferences={},
+                    exp=9999999999,
+                    iat=0,
+                )
+                try:
+                    response = await call_next(request)
+                    return response
+                finally:
+                    clear_tenant_context()
+
         # Extract token from Authorization header
         auth_header = request.headers.get("Authorization")
         if auth_header and auth_header.startswith("Bearer "):
@@ -155,13 +197,41 @@ class TenantContextMiddleware(BaseHTTPMiddleware):
 
 
 async def get_token_claims(
+    request: Request,
     credentials: HTTPAuthorizationCredentials = Depends(security),
 ) -> TokenClaims:
     """
     Dependency to get and validate token claims.
 
     Raises HTTPException if token is missing or invalid.
+
+    In development mode, accepts X-Dev-User header for mock authentication.
     """
+    settings = get_settings()
+
+    # Development mode: Accept mock auth header
+    if settings.ENVIRONMENT == "development":
+        dev_user = request.headers.get("X-Dev-User")
+        if dev_user:
+            # Return mock claims with full permissions for development
+            logger.debug(f"Development mode: Using mock auth for user '{dev_user}'")
+            return TokenClaims(
+                sub=f"dev-{dev_user}",
+                tenant_id="dev-tenant-001",
+                tenant_slug="development",
+                roles=["administrator"],
+                permissions=[
+                    "claims:read", "claims:write", "claims:create", "claims:update", "claims:approve",
+                    "documents:read", "documents:write", "documents:upload", "documents:delete",
+                    "admin:users", "admin:settings", "admin:access",
+                    "reports:view", "reports:export",
+                    "eligibility:check", "eligibility:batch",
+                ],
+                provider_preferences={},
+                exp=9999999999,  # Far future expiry for dev
+                iat=0,
+            )
+
     if not credentials:
         raise HTTPException(
             status_code=401,
@@ -170,7 +240,6 @@ async def get_token_claims(
         )
 
     try:
-        settings = get_settings()
         payload = jwt.decode(
             credentials.credentials,
             settings.JWT_SECRET_KEY,

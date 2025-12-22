@@ -13,7 +13,7 @@ import {
   signal,
   OnInit,
 } from '@angular/core';
-import { CommonModule, CurrencyPipe, PercentPipe } from '@angular/common';
+import { CommonModule, CurrencyPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CardModule } from 'primeng/card';
 import { TableModule } from 'primeng/table';
@@ -59,7 +59,6 @@ import { PoliciesStore } from '@claims-processing/data-access';
     ProgressSpinnerModule,
     DividerModule,
     CurrencyPipe,
-    PercentPipe,
   ],
   providers: [ConfirmationService, MessageService],
   template: `

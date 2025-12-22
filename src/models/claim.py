@@ -39,8 +39,10 @@ from src.models.base import Base, TimeStampedModel, UUIDModel
 if TYPE_CHECKING:
     from src.models.healthcare_provider import HealthcareProvider
     from src.models.member import Member
+    from src.models.person import Person
     from src.models.policy import Policy
     from src.models.tenant import Tenant
+    from src.models.validation_result import ClaimRejection, ValidationResult
 
 
 class Claim(Base, UUIDModel, TimeStampedModel):
@@ -384,6 +386,18 @@ class Claim(Base, UUIDModel, TimeStampedModel):
         cascade="all, delete-orphan",
         order_by="ClaimStatusHistory.changed_at.desc()",
     )
+    validation_results: Mapped[list["ValidationResult"]] = relationship(
+        "ValidationResult",
+        back_populates="claim",
+        cascade="all, delete-orphan",
+        order_by="ValidationResult.created_at.desc()",
+    )
+    rejections: Mapped[list["ClaimRejection"]] = relationship(
+        "ClaimRejection",
+        back_populates="claim",
+        cascade="all, delete-orphan",
+        order_by="ClaimRejection.created_at.desc()",
+    )
     # policy: Mapped["Policy"] = relationship(back_populates="claims")
     # member: Mapped["Member"] = relationship(back_populates="claims")
     # provider: Mapped["HealthcareProvider"] = relationship(back_populates="claims", foreign_keys=[provider_id])
@@ -694,8 +708,13 @@ class ClaimDocument(Base, UUIDModel, TimeStampedModel):
         comment="SHA-256 hash of file content",
     )
 
-    # Relationship
+    # Relationships
     claim: Mapped["Claim"] = relationship(back_populates="documents")
+    persons: Mapped[list["Person"]] = relationship(
+        back_populates="document",
+        cascade="all, delete-orphan",
+        foreign_keys="Person.document_id",
+    )
 
     # Indexes
     __table_args__ = (

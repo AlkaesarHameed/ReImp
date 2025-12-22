@@ -1,12 +1,13 @@
 {
+  "_comment": "AUTO-GENERATED from config/ports.yaml - DO NOT EDIT MANUALLY",
   "/api": {
-    "target": "http://localhost:8000",
+    "target": "http://localhost:8002",
     "secure": false,
     "changeOrigin": true,
     "logLevel": "debug"
   },
   "/ws": {
-    "target": "ws://localhost:8000",
+    "target": "ws://localhost:8002",
     "secure": false,
     "ws": true,
     "changeOrigin": true,

@@ -4,7 +4,6 @@
  */
 import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
 import { CardModule } from 'primeng/card';
 import { TabViewModule } from 'primeng/tabview';
 import { TimelineModule } from 'primeng/timeline';
@@ -22,7 +21,6 @@ interface ClaimStatus {
   standalone: true,
   imports: [
     CommonModule,
-    RouterLink,
     CardModule,
     TabViewModule,
     TimelineModule,

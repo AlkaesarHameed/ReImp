@@ -2,7 +2,7 @@
 FastAPI Main Application
 Entry point for the API server
 Source: https://fastapi.tiangolo.com/
-Verified: 2025-11-14
+Verified: 2025-12-22
 """
 
 from contextlib import asynccontextmanager
@@ -12,7 +12,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.api.config import settings
-from src.api.routes import auth, claims, documents, edi, eligibility, fwa, health, lcd_ncd, llm_settings, users, validation
+from src.api.middleware.tenant import TenantContextMiddleware
+from src.api.routes import audit, auth, claims, documents, edi, eligibility, fwa, health, lcd_ncd, llm_settings, users, validation
 from src.db.connection import close_db_connection
 from src.utils.logging import get_logger, setup_logging
 
@@ -72,10 +73,15 @@ app.add_middleware(
     allow_headers=settings.CORS_HEADERS,
 )
 
+# Tenant context middleware for multi-tenant isolation
+# Must be added after CORS middleware
+app.add_middleware(TenantContextMiddleware)
+
 # Include routers
 app.include_router(health.router)
 app.include_router(auth.router)
 app.include_router(users.router)
+app.include_router(audit.router)
 app.include_router(documents.router)
 app.include_router(claims.router)
 app.include_router(validation.router)

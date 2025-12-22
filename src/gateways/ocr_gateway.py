@@ -65,6 +65,7 @@ except ImportError:
     logger.warning("Tesseract not installed. Tesseract fallback will not be available.")
 
 
+
 @dataclass
 class OCRBoundingBox:
     """Bounding box for detected text."""
@@ -248,15 +249,21 @@ class OCRGateway(BaseGateway[OCRRequest, OCRResponse, OCRProvider]):
         """Initialize OCR provider."""
         if provider == OCRProvider.PADDLEOCR:
             if not PADDLEOCR_AVAILABLE:
-                raise ProviderUnavailableError(
-                    "PaddleOCR is not installed", provider=provider.value
+                # Check if HTTP endpoint is configured
+                if self._settings.PADDLEOCR_HTTP_URL:
+                    logger.info(f"PaddleOCR library not available, using HTTP endpoint: {self._settings.PADDLEOCR_HTTP_URL}")
+                    self._paddle_ocr = None  # Will use HTTP mode
+                else:
+                    raise ProviderUnavailableError(
+                        "PaddleOCR is not installed and no HTTP endpoint configured", provider=provider.value
+                    )
+            else:
+                # Initialize PaddleOCR in thread pool (CPU-bound)
+                loop = asyncio.get_event_loop()
+                self._paddle_ocr = await loop.run_in_executor(
+                    self._executor, self._create_paddle_ocr
                 )
-            # Initialize PaddleOCR in thread pool (CPU-bound)
-            loop = asyncio.get_event_loop()
-            self._paddle_ocr = await loop.run_in_executor(
-                self._executor, self._create_paddle_ocr
-            )
-            logger.info("PaddleOCR initialized")
+                logger.info("PaddleOCR initialized")
 
         elif provider == OCRProvider.AZURE_DI:
             if not AZURE_DI_AVAILABLE:
@@ -310,12 +317,80 @@ class OCRGateway(BaseGateway[OCRRequest, OCRResponse, OCRProvider]):
             raise GatewayError(f"Unsupported OCR provider: {provider}")
 
     async def _execute_paddleocr(self, request: OCRRequest) -> OCRResponse:
-        """Execute OCR using PaddleOCR."""
-        if not self._paddle_ocr:
-            raise ProviderUnavailableError(
-                "PaddleOCR not initialized", provider="paddleocr"
-            )
+        """Execute OCR using PaddleOCR (library or HTTP)."""
+        # If library is available and initialized, use it
+        if self._paddle_ocr:
+            return await self._execute_paddleocr_library(request)
 
+        # Otherwise, use HTTP endpoint
+        if self._settings.PADDLEOCR_HTTP_URL:
+            return await self._execute_paddleocr_http(request)
+
+        raise ProviderUnavailableError(
+            "PaddleOCR not initialized", provider="paddleocr"
+        )
+
+    async def _execute_paddleocr_http(self, request: OCRRequest) -> OCRResponse:
+        """Execute OCR using PaddleOCR HTTP service."""
+        import httpx
+
+        url = f"{self._settings.PADDLEOCR_HTTP_URL}/ocr/multi"
+
+        # Prepare multipart form data - the server expects file upload
+        languages = ",".join(request.languages) if request.languages else "en,ar"
+        files = {"file": ("image.png", request.image_data, "image/png")}
+        form_data = {"languages": languages}
+
+        async with httpx.AsyncClient(timeout=120.0) as client:
+            response = await client.post(url, files=files, data=form_data)
+            response.raise_for_status()
+            resp_data = response.json()
+
+        # Parse HTTP response
+        text_blocks: list[OCRTextBlock] = []
+        all_text_parts: list[str] = []
+        total_confidence = 0.0
+        block_count = 0
+
+        results = resp_data.get("results", [])
+        for result in results:
+            text = result.get("text", "")
+            confidence = result.get("confidence", 0.9)
+            bbox_data = result.get("bbox", {})
+
+            if text:
+                # Extract bounding box - server returns polygon coordinates
+                top_left = bbox_data.get("top_left", [0, 0])
+                bottom_right = bbox_data.get("bottom_right", [0, 0])
+                bbox = OCRBoundingBox(
+                    x=float(top_left[0]) if top_left else 0,
+                    y=float(top_left[1]) if top_left else 0,
+                    width=float(bottom_right[0] - top_left[0]) if bottom_right and top_left else 0,
+                    height=float(bottom_right[1] - top_left[1]) if bottom_right and top_left else 0,
+                )
+                text_blocks.append(OCRTextBlock(text=text, confidence=confidence, bbox=bbox))
+                all_text_parts.append(text)
+                total_confidence += confidence
+                block_count += 1
+
+        # Also check for direct text response
+        if not all_text_parts and resp_data.get("text"):
+            all_text_parts.append(resp_data.get("text", ""))
+            total_confidence = resp_data.get("average_confidence", 0.8)
+            block_count = 1
+
+        avg_confidence = total_confidence / block_count if block_count > 0 else resp_data.get("average_confidence", 0.0)
+
+        return OCRResponse(
+            text="\n".join(all_text_parts),
+            text_blocks=text_blocks,
+            tables=[],
+            confidence=avg_confidence,
+            provider="paddleocr-http",
+        )
+
+    async def _execute_paddleocr_library(self, request: OCRRequest) -> OCRResponse:
+        """Execute OCR using PaddleOCR library."""
         loop = asyncio.get_event_loop()
 
         def run_ocr():

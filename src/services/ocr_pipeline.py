@@ -132,7 +132,7 @@ class OCRPipelineConfig:
     extract_tables: bool = True
     detect_language: bool = True
     max_pages: int = 50
-    timeout_per_page_seconds: int = 30
+    timeout_per_page_seconds: int = 120  # Increased for large/high-res images
     languages: list[str] = field(default_factory=lambda: ["en", "ar"])
 
 
@@ -177,11 +177,8 @@ class OCRPipelineService:
             try:
                 from src.gateways.ocr_gateway import OCRGateway
 
-                self._ocr_gateway = OCRGateway(
-                    primary_provider=self.config.primary_provider,
-                    fallback_provider=self.config.fallback_provider,
-                    confidence_threshold=self.config.confidence_threshold,
-                )
+                # Use default gateway config from settings (or pass custom GatewayConfig)
+                self._ocr_gateway = OCRGateway()
                 await self._ocr_gateway.initialize()
                 logger.info("OCR gateway initialized")
             except ImportError:
@@ -326,8 +323,7 @@ class OCRPipelineService:
             request = OCRRequest(
                 image_data=page_data,
                 languages=self.config.languages,
-                extract_tables=self.config.extract_tables,
-                detect_layout=True,
+                detect_tables=self.config.extract_tables,
             )
 
             result = await asyncio.wait_for(
@@ -345,34 +341,40 @@ class OCRPipelineService:
 
             ocr_result = result.data
 
-            # Convert text regions
+            # Convert text blocks to regions
             regions = []
-            for region in ocr_result.text_regions:
+            for block in ocr_result.text_blocks:
+                # Convert OCRBoundingBox to list format [x, y, width, height]
+                bbox_list = [
+                    block.bbox.x,
+                    block.bbox.y,
+                    block.bbox.width,
+                    block.bbox.height,
+                ]
                 regions.append(TextRegion(
-                    text=region.text,
-                    confidence=region.confidence,
-                    bbox=region.bbox,
+                    text=block.text,
+                    confidence=block.confidence,
+                    bbox=bbox_list,
                     page=page_number,
                 ))
 
-            # Convert tables
+            # Convert OCRTableData objects to ExtractedTable
             tables = []
             for table in ocr_result.tables:
                 cells = []
-                for row_idx, row in enumerate(table.get("rows", [])):
-                    for col_idx, cell_text in enumerate(row):
-                        cells.append(TableCell(
-                            text=str(cell_text),
-                            row=row_idx,
-                            col=col_idx,
-                        ))
+                for cell in table.cells:
+                    cells.append(TableCell(
+                        text=cell.text,
+                        row=cell.row,
+                        col=cell.column,
+                    ))
                 if cells:
                     tables.append(ExtractedTable(
                         cells=cells,
-                        rows=len(table.get("rows", [])),
-                        cols=len(table.get("rows", [[]])[0]) if table.get("rows") else 0,
+                        rows=table.row_count,
+                        cols=table.column_count,
                         page=page_number,
-                        confidence=table.get("confidence", 0.9),
+                        confidence=0.9,
                     ))
 
             processing_time = int(
@@ -385,7 +387,7 @@ class OCRPipelineService:
                 confidence=ocr_result.confidence,
                 regions=regions,
                 tables=tables,
-                detected_language=ocr_result.detected_language or "en",
+                detected_language=ocr_result.language_detected or "en",
                 processing_time_ms=processing_time,
                 provider_used=result.provider_used or self.config.primary_provider.value,
             )

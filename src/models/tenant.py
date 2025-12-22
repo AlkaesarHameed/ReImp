@@ -17,9 +17,11 @@ from src.models.base import Base, TimeStampedModel, UUIDModel
 
 if TYPE_CHECKING:
     from src.models.claim import Claim
+    from src.models.llm_settings import LLMSettings
     from src.models.member import Member
     from src.models.policy import Policy
     from src.models.provider import HealthcareProvider
+    from src.models.permission import Role
 
 
 class Tenant(Base, UUIDModel, TimeStampedModel):
@@ -173,6 +175,20 @@ class Tenant(Base, UUIDModel, TimeStampedModel):
     # policies: Mapped[list["Policy"]] = relationship(back_populates="tenant")
     # providers: Mapped[list["HealthcareProvider"]] = relationship(back_populates="tenant")
     # members: Mapped[list["Member"]] = relationship(back_populates="tenant")
+
+    # Custom roles defined for this tenant
+    custom_roles: Mapped[list["Role"]] = relationship(
+        "Role",
+        back_populates="tenant",
+        foreign_keys="Role.tenant_id",
+    )
+
+    # LLM settings for this tenant
+    llm_settings: Mapped[list["LLMSettings"]] = relationship(
+        "LLMSettings",
+        back_populates="tenant",
+        cascade="all, delete-orphan",
+    )
 
     def __repr__(self) -> str:
         return f"<Tenant(id={self.id}, name='{self.name}', slug='{self.slug}')>"

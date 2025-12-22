@@ -27,6 +27,42 @@ from src.core.enums import DocumentStatus, DocumentType
 logger = logging.getLogger(__name__)
 
 
+# =============================================================================
+# WebSocket Integration
+# =============================================================================
+
+
+async def _notify_websocket_progress(
+    document_id: str,
+    stage: str,
+    progress_percent: int,
+    message: str = "",
+    ocr_confidence: Optional[float] = None,
+    parsing_confidence: Optional[float] = None,
+) -> None:
+    """
+    Send progress update via WebSocket if manager is available.
+
+    This is a best-effort notification - failures are logged but don't
+    interrupt document processing.
+    """
+    try:
+        from src.api.websocket import get_websocket_manager
+
+        manager = get_websocket_manager()
+        await manager.send_progress(
+            document_id=document_id,
+            stage=stage,
+            progress_percent=progress_percent,
+            message=message,
+            ocr_confidence=ocr_confidence,
+            parsing_confidence=parsing_confidence,
+        )
+    except Exception as e:
+        # WebSocket notification is non-critical
+        logger.debug(f"WebSocket notification failed (non-critical): {e}")
+
+
 class ProcessingStage(str, Enum):
     """Document processing stages."""
 
@@ -61,6 +97,7 @@ class DocumentProcessingResult:
     # Storage info
     storage_path: str = ""
     storage_bucket: str = ""
+    storage_document_id: str = ""  # Document ID from storage service
     file_hash: str = ""
     file_size: int = 0
     content_type: str = ""
@@ -112,7 +149,7 @@ class ProcessorConfig:
     # Timeouts
     upload_timeout_seconds: int = 60
     ocr_timeout_seconds: int = 120
-    parsing_timeout_seconds: int = 60
+    parsing_timeout_seconds: int = 300  # Increased to 5 minutes for vision model processing
 
     # Concurrency
     max_concurrent_pages: int = 5
@@ -167,6 +204,7 @@ class DocumentProcessor:
         if self._storage is None:
             from src.services.document_storage import DocumentStorageService
 
+            # Create fresh instance to ensure latest config is used
             self._storage = DocumentStorageService()
             await self._storage.initialize()
             logger.info("Document storage initialized")
@@ -207,8 +245,11 @@ class DocumentProcessor:
         stage: ProcessingStage,
         progress: int,
         message: str,
+        ocr_confidence: Optional[float] = None,
+        parsing_confidence: Optional[float] = None,
     ) -> None:
-        """Update processing progress."""
+        """Update processing progress via callback and WebSocket."""
+        # Update via callback (for background task status tracking)
         callback = self._progress_callbacks.get(document_id)
         if callback:
             try:
@@ -226,6 +267,16 @@ class DocumentProcessor:
             except Exception as e:
                 logger.warning(f"Progress callback error: {e}")
 
+        # Also notify via WebSocket for real-time UI updates
+        await _notify_websocket_progress(
+            document_id=document_id,
+            stage=stage.value,
+            progress_percent=progress,
+            message=message,
+            ocr_confidence=ocr_confidence,
+            parsing_confidence=parsing_confidence,
+        )
+
     async def process_document(
         self,
         tenant_id: str,
@@ -235,6 +286,7 @@ class DocumentProcessor:
         file_data: BinaryIO | bytes,
         content_type: str,
         existing_hashes: Optional[set[str]] = None,
+        document_id: Optional[str] = None,
     ) -> DocumentProcessingResult:
         """
         Process a document through the complete pipeline.
@@ -247,13 +299,14 @@ class DocumentProcessor:
             file_data: File content
             content_type: MIME type
             existing_hashes: Set of existing file hashes for dedup
+            document_id: Optional externally-provided document ID
 
         Returns:
             DocumentProcessingResult with all processing data
         """
         await self.initialize()
 
-        document_id = str(uuid4())
+        document_id = document_id or str(uuid4())
         start_time = datetime.now(timezone.utc)
         result = DocumentProcessingResult(
             success=False,
@@ -291,7 +344,8 @@ class DocumentProcessor:
                 result.processing_stage = ProcessingStage.COMPLETE
                 return result
 
-            result.document_id = upload_result.document_id
+            # Keep the original document_id, but store the storage-generated one for reference
+            result.storage_document_id = upload_result.document_id
             result.storage_path = upload_result.storage_path
             result.storage_bucket = upload_result.storage_bucket
             result.file_hash = upload_result.file_hash
@@ -310,9 +364,21 @@ class DocumentProcessor:
             # Get the file data for OCR
             if hasattr(file_data, "read"):
                 file_data.seek(0)
-                image_bytes = file_data.read()
+                raw_bytes = file_data.read()
             else:
-                image_bytes = file_data
+                raw_bytes = file_data
+
+            # Convert PDF to images if necessary
+            # Source: Design Doc 08 Section 14 - PDF-to-Image Conversion Fix
+            # Verified: 2025-12-21
+            if content_type == "application/pdf":
+                await self._update_progress(
+                    document_id, ProcessingStage.OCR, 35, "Converting PDF to images..."
+                )
+                image_bytes = await self._convert_pdf_to_images(raw_bytes)
+                logger.info(f"Converted PDF to {len(image_bytes)} page images for OCR")
+            else:
+                image_bytes = raw_bytes
 
             ocr_result = await asyncio.wait_for(
                 self._ocr.process_document(
@@ -360,12 +426,23 @@ class DocumentProcessor:
                 table.to_dict() for table in ocr_result.tables
             ]
 
+            # Pass image data to LLM for vision-based parsing
+            # For PDFs, image_bytes is a list of page images - use first page
+            # For images, image_bytes is the raw bytes
+            if content_type == "application/pdf" and isinstance(image_bytes, list):
+                # Use first page image for vision parsing
+                parser_image_data = image_bytes[0] if image_bytes else None
+            elif content_type.startswith("image/"):
+                parser_image_data = image_bytes
+            else:
+                parser_image_data = None
+
             parsing_result = await asyncio.wait_for(
                 self._parser.parse_claim_document(
                     ocr_text=ocr_result.full_text,
                     document_type=document_type,
                     tables=tables_data,
-                    image_data=image_bytes if content_type.startswith("image/") else None,
+                    image_data=parser_image_data,
                 ),
                 timeout=self.config.parsing_timeout_seconds,
             )
@@ -567,6 +644,124 @@ class DocumentProcessor:
 
         return issues
 
+    async def _convert_pdf_to_images(
+        self,
+        pdf_bytes: bytes,
+        dpi: int = 300,
+    ) -> list[bytes]:
+        """
+        Convert PDF pages to PNG images for OCR processing.
+
+        Supports partial success - continues processing remaining pages if
+        individual pages fail to convert. This ensures we get as much data
+        as possible from documents with corrupted or complex pages.
+
+        Args:
+            pdf_bytes: Raw PDF file bytes
+            dpi: Resolution for rendering (default 300 for good OCR quality)
+
+        Returns:
+            List of PNG image bytes for successfully converted pages
+
+        Raises:
+            ImportError: If PyMuPDF is not installed
+            ValueError: If no pages could be converted at all
+
+        Source: Design Doc 08 Section 14 - PDF-to-Image Conversion Fix
+        Evidence: PyMuPDF (fitz) is the standard library for PDF rendering
+        https://pymupdf.readthedocs.io/en/latest/
+        Verified: 2025-12-21
+        """
+        try:
+            import fitz  # PyMuPDF
+        except ImportError as e:
+            logger.error("PyMuPDF (fitz) not installed. Run: pip install pymupdf")
+            raise ImportError(
+                "PyMuPDF is required for PDF processing. Install with: pip install pymupdf"
+            ) from e
+
+        images: list[bytes] = []
+        failed_pages: list[tuple[int, str]] = []
+        doc = None
+
+        try:
+            # Open PDF from bytes
+            doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+            total_pages = len(doc)
+
+            if total_pages == 0:
+                raise ValueError("PDF contains no pages")
+
+            # Calculate zoom factor for desired DPI (PDF default is 72 DPI)
+            zoom = dpi / 72
+
+            for page_num in range(total_pages):
+                try:
+                    page = doc.load_page(page_num)
+
+                    # Create transformation matrix for desired resolution
+                    mat = fitz.Matrix(zoom, zoom)
+
+                    # Render page to pixmap (image)
+                    pix = page.get_pixmap(matrix=mat)
+
+                    # Convert to PNG bytes
+                    png_bytes = pix.tobytes("png")
+                    images.append(png_bytes)
+
+                    logger.debug(
+                        f"Converted PDF page {page_num + 1}/{total_pages} to PNG "
+                        f"({pix.width}x{pix.height} @ {dpi} DPI)"
+                    )
+
+                except Exception as page_error:
+                    # Log the error but continue with other pages
+                    error_msg = str(page_error)
+                    failed_pages.append((page_num + 1, error_msg))
+                    logger.warning(
+                        f"Failed to convert PDF page {page_num + 1}/{total_pages}: {error_msg}"
+                    )
+
+            # Check if we got any images at all
+            if not images:
+                error_details = "; ".join(
+                    f"page {p}: {e}" for p, e in failed_pages
+                )
+                raise ValueError(
+                    f"PDF conversion failed - no pages could be converted. "
+                    f"Errors: {error_details}"
+                )
+
+            # Log summary
+            if failed_pages:
+                failed_nums = [str(p) for p, _ in failed_pages]
+                logger.warning(
+                    f"PDF conversion completed with {len(failed_pages)} failed pages "
+                    f"({', '.join(failed_nums)}) out of {total_pages} total. "
+                    f"Successfully converted {len(images)} pages."
+                )
+            else:
+                logger.info(
+                    f"Successfully converted all {len(images)} PDF pages to images"
+                )
+
+            return images
+
+        except ValueError:
+            # Re-raise ValueError (our custom errors) as-is
+            raise
+
+        except Exception as e:
+            logger.error(f"Failed to open or process PDF: {e}")
+            raise ValueError(f"PDF conversion failed: {e}") from e
+
+        finally:
+            if doc:
+                try:
+                    doc.close()
+                except Exception:
+                    pass  # Ignore close errors
+
     async def reprocess_document(
         self,
         tenant_id: str,
@@ -670,20 +865,33 @@ async def persist_document_result(
     session: AsyncSession,
     claim_id: str,
     result: DocumentProcessingResult,
+    tenant_id: Optional[str] = None,
 ) -> str:
     """
     Persist document processing result to database.
+
+    Creates:
+    - ClaimDocument record with extracted_data JSONB (backward compatibility)
+    - Person record with structured demographics
+    - AssociatedData records for diagnoses, procedures, etc.
 
     Args:
         session: Database session
         claim_id: Associated claim ID
         result: Processing result
+        tenant_id: Tenant ID for Person records
 
     Returns:
         Document ID
+
+    Source: Design Document 07-document-extraction-system-design.md Section 3.4
+    Verified: 2025-12-20
     """
+    from uuid import UUID as UUIDType
+
     from src.models.claim import ClaimDocument
 
+    # Create ClaimDocument (with JSONB for backward compatibility)
     document = ClaimDocument(
         id=result.document_id,
         claim_id=claim_id,
@@ -702,6 +910,47 @@ async def persist_document_result(
 
     session.add(document)
     await session.flush()
+
+    # Create Person and AssociatedData records if we have tenant_id and extracted data
+    if tenant_id and result.extracted_data and result.success:
+        try:
+            from src.models.person import (
+                create_associated_data_from_extracted,
+                create_person_from_extracted_data,
+            )
+
+            # Parse UUIDs
+            doc_uuid = UUIDType(result.document_id) if isinstance(result.document_id, str) else result.document_id
+            tenant_uuid = UUIDType(tenant_id) if isinstance(tenant_id, str) else tenant_id
+
+            # Create Person record
+            person = create_person_from_extracted_data(
+                document_id=doc_uuid,
+                tenant_id=tenant_uuid,
+                extracted_data=result.extracted_data,
+                confidence_scores=None,  # Could be populated from result
+            )
+            session.add(person)
+            await session.flush()  # Get person.id
+
+            # Create AssociatedData records
+            associated_records = create_associated_data_from_extracted(
+                person_id=person.id,
+                document_id=doc_uuid,
+                tenant_id=tenant_uuid,
+                extracted_data=result.extracted_data,
+            )
+            for record in associated_records:
+                session.add(record)
+
+            logger.info(
+                f"Created Person and {len(associated_records)} AssociatedData records "
+                f"for document {result.document_id}"
+            )
+
+        except Exception as e:
+            # Person creation is non-critical - JSONB data is still saved
+            logger.warning(f"Failed to create Person records (non-critical): {e}")
 
     return result.document_id
 
@@ -722,6 +971,12 @@ def get_document_processor(
     if _document_processor is None:
         _document_processor = DocumentProcessor(config=config)
     return _document_processor
+
+
+def reset_document_processor() -> None:
+    """Reset document processor singleton. Useful after config changes."""
+    global _document_processor
+    _document_processor = None
 
 
 async def create_document_processor(

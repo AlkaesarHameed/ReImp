@@ -701,6 +701,17 @@ export class LlmSettingsComponent implements OnInit {
   private readonly api = inject(LLMSettingsApiService);
   private readonly messageService = inject(MessageService);
 
+  // Enable debug logging
+  private readonly DEBUG = true;
+  private log(context: string, ...args: unknown[]): void {
+    if (this.DEBUG) {
+      console.log(`[LLM-Settings] ${context}:`, ...args);
+    }
+  }
+  private logError(context: string, error: unknown): void {
+    console.error(`[LLM-Settings] ERROR - ${context}:`, error);
+  }
+
   // State
   loading = signal(false);
   saving = signal(false);
@@ -812,43 +823,53 @@ export class LlmSettingsComponent implements OnInit {
   ];
 
   ngOnInit(): void {
+    this.log('ngOnInit', 'Component initializing');
     this.loadData();
   }
 
   loadData(): void {
+    this.log('loadData', 'Starting data load');
     this.loading.set(true);
     this.usageLoading.set(true);
 
     // Load providers
+    this.log('loadData', 'Fetching providers from API');
     this.api.getProviders().subscribe({
-      next: (response) => this.providers.set(response.providers),
+      next: (response) => {
+        this.log('loadData', 'Providers loaded successfully', response.providers);
+        this.providers.set(response.providers);
+      },
       error: (error) => {
-        console.error('Failed to load providers:', error);
+        this.logError('loadData - getProviders', error);
         this.loadMockProviders();
       },
     });
 
     // Load settings
+    this.log('loadData', 'Fetching settings from API');
     this.api.getAllSettings().subscribe({
       next: (settings) => {
+        this.log('loadData', 'Settings loaded successfully', settings);
         this.settings.set(settings);
         this.loading.set(false);
       },
       error: (error) => {
-        console.error('Failed to load settings:', error);
+        this.logError('loadData - getAllSettings', error);
         this.loadMockSettings();
         this.loading.set(false);
       },
     });
 
     // Load usage stats
+    this.log('loadData', 'Fetching usage stats from API');
     this.api.getUsageStats().subscribe({
       next: (response) => {
+        this.log('loadData', 'Usage stats loaded successfully', response.stats);
         this.usageStats.set(response.stats);
         this.usageLoading.set(false);
       },
       error: (error) => {
-        console.error('Failed to load usage stats:', error);
+        this.logError('loadData - getUsageStats', error);
         this.loadMockUsage();
         this.usageLoading.set(false);
       },
@@ -856,14 +877,20 @@ export class LlmSettingsComponent implements OnInit {
   }
 
   getSettingsForTask(taskType: LLMTaskType): LLMSettings | undefined {
-    return this.settings().find(s => s.task_type === taskType);
+    const settings = this.settings().find(s => s.task_type === taskType);
+    this.log('getSettingsForTask', `Task: ${taskType}`, settings ? 'found' : 'not found');
+    return settings;
   }
 
   getModelsForProvider(provider: LLMProvider | undefined): { label: string; value: string }[] {
-    if (!provider) return [];
+    if (!provider) {
+      this.log('getModelsForProvider', 'No provider specified');
+      return [];
+    }
 
     const providerInfo = this.providers().find(p => p.provider === provider);
     if (!providerInfo) {
+      this.log('getModelsForProvider', `Provider ${provider} not found in loaded providers, using fallback models`);
       // Fallback models
       const fallbackModels: Record<string, string[]> = {
         azure: ['gpt-4', 'gpt-4-turbo', 'gpt-3.5-turbo'],
@@ -875,6 +902,7 @@ export class LlmSettingsComponent implements OnInit {
       return (fallbackModels[provider] || []).map(m => ({ label: m, value: m }));
     }
 
+    this.log('getModelsForProvider', `Provider ${provider} has ${providerInfo.models.length} models`);
     return providerInfo.models.map(m => ({ label: m, value: m }));
   }
 
@@ -890,25 +918,30 @@ export class LlmSettingsComponent implements OnInit {
   }
 
   onProviderChange(settings: LLMSettings, _taskType: LLMTaskType): void {
+    this.log('onProviderChange', `Provider changed to ${settings.provider} for task ${_taskType}`);
     // Reset model when provider changes
     const models = this.getModelsForProvider(settings.provider);
     if (models.length > 0) {
       settings.model_name = models[0].value;
+      this.log('onProviderChange', `Model reset to ${settings.model_name}`);
     }
   }
 
   toggleTask(task: { value: LLMTaskType; enabled: boolean }): void {
+    this.log('toggleTask', `Toggling task ${task.value} to ${task.enabled}`);
     const settings = this.getSettingsForTask(task.value);
     if (settings) {
       this.api.updateSettings(task.value, { is_active: task.enabled }).subscribe({
         next: () => {
+          this.log('toggleTask', `Task ${task.value} toggled successfully`);
           this.messageService.add({
             severity: 'success',
             summary: task.enabled ? 'Enabled' : 'Disabled',
             detail: `${task.value} has been ${task.enabled ? 'enabled' : 'disabled'}.`,
           });
         },
-        error: () => {
+        error: (error) => {
+          this.logError('toggleTask', error);
           task.enabled = !task.enabled; // Revert
           this.messageService.add({
             severity: 'error',
@@ -917,10 +950,13 @@ export class LlmSettingsComponent implements OnInit {
           });
         },
       });
+    } else {
+      this.log('toggleTask', `No settings found for task ${task.value}`);
     }
   }
 
   createSettings(taskType: LLMTaskType): void {
+    this.log('createSettings', `Creating default settings for task ${taskType}`);
     const defaultSettings: LLMSettings = {
       id: '',
       tenant_id: '',
@@ -936,9 +972,11 @@ export class LlmSettingsComponent implements OnInit {
     };
 
     this.settings.update(current => [...current, defaultSettings]);
+    this.log('createSettings', 'Default settings created', defaultSettings);
   }
 
   saveSettings(taskType: LLMTaskType, settings: LLMSettings): void {
+    this.log('saveSettings', `Saving settings for task ${taskType}`, settings);
     this.saving.set(true);
 
     const update: LLMSettingsUpdate = {
@@ -952,8 +990,10 @@ export class LlmSettingsComponent implements OnInit {
       is_active: settings.is_active,
     };
 
+    this.log('saveSettings', 'Update payload', update);
     this.api.updateSettings(taskType, update).subscribe({
       next: (updated) => {
+        this.log('saveSettings', 'Settings saved successfully', updated);
         this.settings.update(current =>
           current.map(s => s.task_type === taskType ? updated : s)
         );
@@ -965,7 +1005,7 @@ export class LlmSettingsComponent implements OnInit {
         this.saving.set(false);
       },
       error: (error) => {
-        console.error('Failed to save settings:', error);
+        this.logError('saveSettings', error);
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
@@ -977,6 +1017,7 @@ export class LlmSettingsComponent implements OnInit {
   }
 
   testConnection(settings: LLMSettings): void {
+    this.log('testConnection', `Testing connection for provider ${settings.provider}, model ${settings.model_name}`);
     this.testing.set(true);
 
     this.api.testConnection({
@@ -985,11 +1026,13 @@ export class LlmSettingsComponent implements OnInit {
       api_endpoint: settings.api_endpoint,
     }).subscribe({
       next: (result) => {
+        this.log('testConnection', 'Test completed', result);
         this.testResult.set(result);
         this.testDialogVisible = true;
         this.testing.set(false);
       },
       error: (error) => {
+        this.logError('testConnection', error);
         this.testResult.set({
           success: false,
           message: 'Connection test failed',
@@ -1003,6 +1046,7 @@ export class LlmSettingsComponent implements OnInit {
 
   // Mock data loaders for development
   private loadMockProviders(): void {
+    this.log('loadMockProviders', 'Loading mock provider data (API unavailable)');
     this.providers.set([
       {
         provider: 'azure',
@@ -1040,6 +1084,7 @@ export class LlmSettingsComponent implements OnInit {
   }
 
   private loadMockSettings(): void {
+    this.log('loadMockSettings', 'Loading mock settings data (API unavailable)');
     this.settings.set([
       {
         id: '1',
@@ -1086,6 +1131,7 @@ export class LlmSettingsComponent implements OnInit {
   }
 
   private loadMockUsage(): void {
+    this.log('loadMockUsage', 'Loading mock usage stats (API unavailable)');
     this.usageStats.set([
       {
         task_type: 'extraction',

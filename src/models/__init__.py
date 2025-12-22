@@ -59,6 +59,18 @@ from src.models.edi_transaction import (
     EDIDirection,
 )
 
+# Document Extraction Models
+# Source: Design Document 07-document-extraction-system-design.md
+from src.models.person import (
+    Person,
+    AssociatedData,
+    ExtractionSource,
+    AssociatedDataCategory,
+    FieldType,
+    create_person_from_extracted_data,
+    create_associated_data_from_extracted,
+)
+
 __all__ = [
     # Base classes
     "Base",
@@ -109,4 +121,12 @@ __all__ = [
     "EDITransactionType",
     "EDITransactionStatus",
     "EDIDirection",
+    # Document Extraction models
+    "Person",
+    "AssociatedData",
+    "ExtractionSource",
+    "AssociatedDataCategory",
+    "FieldType",
+    "create_person_from_extracted_data",
+    "create_associated_data_from_extracted",
 ]

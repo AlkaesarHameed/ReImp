@@ -12,12 +12,17 @@
   <link rel="icon" type="image/x-icon" href="favicon.ico">
 
   <!-- Security Headers (CSP set via server) -->
+  <!-- Note: X-Frame-Options must be set via HTTP header, not meta tag -->
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
-  <meta http-equiv="X-Frame-Options" content="DENY">
   <meta name="referrer" content="strict-origin-when-cross-origin">
 
   <!-- Preconnect to API -->
-  <link rel="preconnect" href="http://localhost:8000">
+  <link rel="preconnect" href="http://localhost:8002">
+
+  <!-- Load Inter font from Google Fonts (fixes PrimeNG 17.18.11 corrupted font bug) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
 
   <!-- Healthcare Theme Colors -->
   <meta name="theme-color" content="#0066CC">

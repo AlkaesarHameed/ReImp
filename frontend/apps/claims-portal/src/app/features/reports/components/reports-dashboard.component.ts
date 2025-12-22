@@ -10,7 +10,7 @@ import {
   ChangeDetectionStrategy,
   signal,
 } from '@angular/core';
-import { CommonModule, CurrencyPipe, DatePipe, DecimalPipe } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CardModule } from 'primeng/card';
@@ -62,9 +62,7 @@ interface RecentReport {
     ChartModule,
     TableModule,
     TagModule,
-    CurrencyPipe,
     DatePipe,
-    DecimalPipe,
   ],
   template: `
     <div class="reports-container">

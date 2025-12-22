@@ -24,9 +24,9 @@ class LLMProvider(str, Enum):
 class OCRProvider(str, Enum):
     """Available OCR providers for document text extraction."""
 
-    PADDLEOCR = "paddleocr"  # Primary: Open-source, on-premises
+    TESSERACT = "tesseract"  # Primary: Open-source, widely available
+    PADDLEOCR = "paddleocr"  # Alternative: PaddlePaddle-based
     AZURE_DI = "azure_di"  # Fallback: Azure Document Intelligence
-    TESSERACT = "tesseract"  # Alternative: Open-source basic
 
 
 class TranslationProvider(str, Enum):

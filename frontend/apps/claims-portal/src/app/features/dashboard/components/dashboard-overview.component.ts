@@ -14,7 +14,7 @@ import {
   signal,
   computed,
 } from '@angular/core';
-import { CommonModule, DecimalPipe, CurrencyPipe, DatePipe } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
@@ -55,8 +55,6 @@ interface RecentActivity {
     TableModule,
     TagModule,
     SkeletonModule,
-    DecimalPipe,
-    CurrencyPipe,
     DatePipe,
   ],
   template: `

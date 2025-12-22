@@ -2,8 +2,8 @@
 LLM Gateway with LiteLLM Integration.
 
 Provides unified access to multiple LLM providers:
-- Primary: Ollama with Qwen2.5-VL (local, open-source)
-- Fallback: OpenAI GPT-4 Vision (commercial)
+- Primary: OpenAI GPT-4o (commercial, reliable)
+- Fallback: Ollama (local, open-source)
 
 Features:
 - Vision capabilities for document understanding
@@ -171,17 +171,17 @@ class LLMGateway(BaseGateway[LLMRequest, LLMResponse, LLMProvider]):
     LLM Gateway for claims processing.
 
     Supports vision models for document understanding:
-    - Ollama with Qwen2.5-VL (primary, local)
-    - OpenAI GPT-4 Vision (fallback, commercial)
-    - Azure OpenAI (alternative fallback)
+    - OpenAI GPT-4o (primary, commercial)
+    - Ollama (fallback, local)
+    - Azure OpenAI (alternative)
     """
 
     # Model mappings for each provider
     PROVIDER_MODELS = {
         LLMProvider.OLLAMA: {
-            "default": "ollama/qwen2.5-vl:7b",
-            "medical": "ollama/biomistral:7b",
-            "vision": "ollama/qwen2.5-vl:7b",
+            "default": "ollama/llama3.2",
+            "medical": "ollama/llama3.2",
+            "vision": "ollama/llama3.2",
         },
         LLMProvider.OPENAI: {
             "default": "gpt-4o",
@@ -229,6 +229,8 @@ class LLMGateway(BaseGateway[LLMRequest, LLMResponse, LLMProvider]):
         settings = self._settings
 
         if provider == LLMProvider.OLLAMA:
+            print(f"[LLM DEBUG] Initializing Ollama: base_url={settings.OLLAMA_BASE_URL}, model={settings.OLLAMA_MODEL}", flush=True)
+            logger.info(f"Initializing Ollama: base_url={settings.OLLAMA_BASE_URL}, model={settings.OLLAMA_MODEL}")
             self._provider_configs[provider] = {
                 "api_base": settings.OLLAMA_BASE_URL,
                 "model": settings.OLLAMA_MODEL,
@@ -240,9 +242,15 @@ class LLMGateway(BaseGateway[LLMRequest, LLMResponse, LLMProvider]):
 
         elif provider == LLMProvider.OPENAI:
             if settings.OPENAI_API_KEY:
+                print(f"[LLM DEBUG] Initializing OpenAI: model={settings.OPENAI_MODEL}, api_key=****{settings.OPENAI_API_KEY[-4:] if len(settings.OPENAI_API_KEY) > 4 else '****'}", flush=True)
+                logger.info(f"Initializing OpenAI: model={settings.OPENAI_MODEL}")
                 self._provider_configs[provider] = {
                     "api_key": settings.OPENAI_API_KEY,
+                    "model": settings.OPENAI_MODEL,
                 }
+                # Reset api_base to ensure OpenAI uses its default endpoint
+                if LITELLM_AVAILABLE:
+                    litellm.api_base = None
             else:
                 logger.warning("OpenAI API key not configured")
                 raise ProviderUnavailableError(
@@ -319,9 +327,20 @@ class LLMGateway(BaseGateway[LLMRequest, LLMResponse, LLMProvider]):
         if "api_base" in provider_config:
             kwargs["api_base"] = provider_config["api_base"]
 
+        # For OpenAI, ensure we're not using a custom api_base
+        if provider == LLMProvider.OPENAI and "api_base" not in kwargs:
+            # Reset global api_base to prevent Ollama URL being used
+            if LITELLM_AVAILABLE:
+                litellm.api_base = None
+
         try:
-            logger.debug(f"Calling LLM provider {provider.value} with model {model}")
+            import time as _time
+            _start = _time.time()
+            has_images = any(m.images for m in request.messages)
+            print(f"[LLM DEBUG] Request: provider={provider.value}, model={model}, api_base={kwargs.get('api_base', 'NOT SET')}, has_images={has_images}", flush=True)
+            logger.info(f"LLM request: provider={provider.value}, model={model}, api_base={kwargs.get('api_base', 'NOT SET')}")
             response = await acompletion(**kwargs)
+            print(f"[LLM DEBUG] Response received in {_time.time() - _start:.1f}s", flush=True)
 
             # Extract response content
             choice = response.choices[0]

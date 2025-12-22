@@ -1,21 +1,29 @@
 /**
- * Development environment configuration.
- * Source: Design Document Section 5.0
- *
- * API URL should match the backend .env API_PORT setting.
- * Default: http://localhost:8000/api/v1
+ * ============================================================================
+ * AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
+ * ============================================================================
+ * Source: config/ports.yaml
+ * Generated: 2025-12-22 09:14:35
+ * Regenerate: python scripts/generate-config.py
+ * ============================================================================
  */
-import { Environment, DEFAULT_PORTS } from './environment.interface';
+import { Environment } from './environment.interface';
 
 export const environment: Environment = {
   production: false,
-  apiUrl: `http://localhost:${DEFAULT_PORTS.API}/api/v1`,
-  wsUrl: `ws://localhost:${DEFAULT_PORTS.API}/ws`,
+
+  // API Configuration (from config/ports.yaml)
+  apiUrl: '/api/v1',
+  wsUrl: 'ws://localhost:8002/ws',
+
+  // Session Configuration
   sessionTimeout: 15 * 60 * 1000, // 15 minutes
+
+  // Logging
   enableAuditLogging: true,
   logLevel: 'debug',
 
-  // Development feature flags
+  // Feature Flags
   features: {
     enableWebSocket: true,
     enableOfflineMode: false,

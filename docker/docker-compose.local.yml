@@ -5,6 +5,28 @@
 # Usage: docker compose -f docker/docker-compose.local.yml up -d
 
 services:
+  # MinIO Object Storage
+  minio:
+    image: minio/minio:latest
+    container_name: claims-minio
+    restart: unless-stopped
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    volumes:
+      - minio-data:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    networks:
+      - claims-network
+
   # PostgreSQL Database
   db:
     image: postgres:15-alpine
@@ -87,7 +109,7 @@ services:
     container_name: claims-pgadmin
     restart: unless-stopped
     environment:
-      - PGADMIN_DEFAULT_EMAIL=admin@claims.local
+      - PGADMIN_DEFAULT_EMAIL=admin@local.dev
       - PGADMIN_DEFAULT_PASSWORD=admin
     ports:
       - "5050:80"
@@ -109,6 +131,26 @@ services:
       - claims-network
     depends_on:
       - redis
+
+  # PaddleOCR Service
+  # Provides OCR with English and Arabic support via REST API
+  # Note: Uses Python 3.10 since PaddleOCR requires Python 3.8-3.12
+  paddleocr:
+    build:
+      context: ./paddleocr
+      dockerfile: Dockerfile
+    container_name: claims-paddleocr
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9090/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 120s
+      retries: 3
+    ports:
+      - "9091:9090"
+    networks:
+      - claims-network
 
   # Typesense Search Engine
   # Source: Design Document 04_validation_engine_comprehensive_design.md
@@ -139,6 +181,7 @@ networks:
     driver: bridge
 
 volumes:
+  minio-data:
   postgres-data:
   redis-data:
   prometheus-data:

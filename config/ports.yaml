@@ -1,0 +1,117 @@
+# =============================================================================
+# SINGLE SOURCE OF TRUTH - Port Configuration
+# =============================================================================
+# This file defines ALL service ports and URLs for the project.
+# After editing, run: python scripts/generate-config.py
+# =============================================================================
+
+version: "1.0"
+environment: development
+
+# =============================================================================
+# Service Definitions
+# =============================================================================
+# Each service defines:
+#   - host: hostname for connections (localhost for dev)
+#   - port: external port (what your code connects to)
+#   - internal_port: container internal port (what the service listens on)
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # Backend API
+  # ---------------------------------------------------------------------------
+  api:
+    host: localhost
+    port: 8002
+    internal_port: 8000
+    description: "FastAPI backend server"
+
+  # ---------------------------------------------------------------------------
+  # Database Services
+  # ---------------------------------------------------------------------------
+  postgres:
+    host: localhost
+    port: 5433
+    internal_port: 5432
+    database: claims
+    user: postgres
+    description: "PostgreSQL database"
+
+  redis:
+    host: localhost
+    port: 6380
+    internal_port: 6379
+    db: 0
+    description: "Redis cache"
+
+  # ---------------------------------------------------------------------------
+  # Object Storage
+  # ---------------------------------------------------------------------------
+  minio:
+    host: localhost
+    api_port: 9000
+    console_port: 9001
+    internal_api_port: 9000
+    internal_console_port: 9001
+    access_key: minioadmin
+    description: "MinIO object storage"
+
+  # ---------------------------------------------------------------------------
+  # AI/ML Services
+  # ---------------------------------------------------------------------------
+  ollama:
+    host: localhost
+    port: 11434
+    description: "Ollama LLM server"
+
+  paddleocr:
+    host: localhost
+    port: 9091
+    internal_port: 9090
+    description: "PaddleOCR service"
+
+  # ---------------------------------------------------------------------------
+  # Search & Indexing
+  # ---------------------------------------------------------------------------
+  typesense:
+    host: localhost
+    port: 8108
+    internal_port: 8108
+    api_key: claims-typesense-dev-key
+    description: "Typesense search engine"
+
+  # ---------------------------------------------------------------------------
+  # Monitoring & Management
+  # ---------------------------------------------------------------------------
+  grafana:
+    host: localhost
+    port: 3000
+    internal_port: 3000
+    description: "Grafana dashboards"
+
+  prometheus:
+    host: localhost
+    port: 9090
+    internal_port: 9090
+    description: "Prometheus metrics"
+
+  pgadmin:
+    host: localhost
+    port: 5050
+    internal_port: 80
+    description: "PostgreSQL admin UI"
+
+  redis_commander:
+    host: localhost
+    port: 8081
+    internal_port: 8081
+    description: "Redis admin UI"
+
+# =============================================================================
+# Frontend Configuration
+# =============================================================================
+frontend:
+  host: localhost
+  port: 4200
+  description: "Angular development server"

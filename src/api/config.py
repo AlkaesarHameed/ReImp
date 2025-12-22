@@ -98,7 +98,7 @@ class Settings(BaseSettings):
     # ============================================================================
     # MinIO Configuration
     # ============================================================================
-    MINIO_ENDPOINT: str = Field(default="minio:9000", description="MinIO endpoint")
+    MINIO_ENDPOINT: str = Field(default="localhost:9002", description="MinIO endpoint (use minio:9000 for Docker)")
     MINIO_ACCESS_KEY: str = Field(default="minioadmin", description="MinIO access key")
     MINIO_SECRET_KEY: str = Field(..., description="MinIO secret key")
     MINIO_SECURE: bool = Field(default=False, description="Use HTTPS for MinIO")

@@ -28,9 +28,10 @@ logger = logging.getLogger(__name__)
 class StorageConfig:
     """MinIO storage configuration."""
 
+    # Default to port 9000 for local development (docker-compose.local.yml)
     endpoint: str = "localhost:9000"
     access_key: str = "minioadmin"
-    secret_key: str = "minioadmin"
+    secret_key: str = "minioadmin"  # Match docker-compose default
     secure: bool = False
     region: str = "us-east-1"
     default_bucket: str = "claims-documents"
@@ -625,8 +626,30 @@ def get_document_storage_service(
     """Get document storage service instance."""
     global _storage_service
     if _storage_service is None:
+        if config is None:
+            # Load config from API settings
+            try:
+                from src.api.config import get_settings
+                settings = get_settings()
+                config = StorageConfig(
+                    endpoint=settings.MINIO_ENDPOINT,
+                    access_key=settings.MINIO_ACCESS_KEY,
+                    secret_key=settings.MINIO_SECRET_KEY,
+                    secure=settings.MINIO_SECURE,
+                    region=settings.MINIO_REGION,
+                    default_bucket="claims-documents",
+                )
+            except Exception as e:
+                logger.warning(f"Could not load MinIO config from settings: {e}")
+                config = StorageConfig()
         _storage_service = DocumentStorageService(config=config)
     return _storage_service
+
+
+def reset_document_storage_service() -> None:
+    """Reset storage service singleton. Useful after config changes."""
+    global _storage_service
+    _storage_service = None
 
 
 async def create_document_storage_service(
