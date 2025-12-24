@@ -144,13 +144,18 @@ export interface ServicesStepData {
 export interface ClaimLineItemForm {
   id?: string;
   procedureCode: string;
-  procedureCodeSystem: 'CPT' | 'HCPCS';
+  procedureCodeSystem: 'CPT' | 'HCPCS' | 'SAC';  // SAC for invoice service codes
   modifiers: string[];
   serviceDate: Date | string | null;
   quantity: number;
   unitPrice: number;
   chargedAmount: number;
   diagnosisPointers: number[];
+  // Additional fields for invoice line items
+  description?: string;
+  category?: string;
+  grossValue?: number;
+  discount?: number;
 }
 
 export interface EligibilityCheckResponse {

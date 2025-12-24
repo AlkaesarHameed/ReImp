@@ -80,6 +80,7 @@ export interface ExtractedClaimData {
   provider: ExtractedProviderData;
   diagnoses: ExtractedDiagnosisCode[];
   procedures: ExtractedProcedureCode[];
+  line_items?: ExtractedLineItem[];  // Invoice line items (medications, supplies, services)
   financial: ExtractedFinancialData;
   identifiers: ExtractedIdentifiers;
   dates: ExtractedDates;
@@ -115,6 +116,24 @@ export interface ExtractedProcedureCode {
   quantity: number;
   charged_amount: string;
   service_date: string;
+  confidence: number;
+}
+
+/**
+ * Line item from invoice/hospital bill extraction.
+ * Represents itemized charges including medications, supplies, services.
+ */
+export interface ExtractedLineItem {
+  sl_no: number;
+  date: string;
+  description: string;
+  sac_code: string;
+  quantity: number;
+  rate: string;
+  gross_value: string;
+  discount: string;
+  total_value: string;
+  category: string;
   confidence: number;
 }
 

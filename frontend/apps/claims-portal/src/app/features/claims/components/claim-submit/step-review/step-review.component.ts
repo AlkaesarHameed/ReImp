@@ -73,8 +73,8 @@ interface EnhancedClaimFormState extends ClaimFormState {
   ],
   template: `
     <div class="step-review">
-      <h3>Step 7: Review & Submit</h3>
-      <p class="step-description">Review all claim details and uploaded documents before submission.</p>
+      <h3>{{ editMode ? 'Step 5: Review Data' : 'Step 6: Submit' }}</h3>
+      <p class="step-description">{{ editMode ? 'Review and edit claim details before submission.' : 'Review all claim details and submit your claim.' }}</p>
 
       <!-- Validation Summary -->
       @if (validationErrors().length > 0) {
@@ -288,32 +288,32 @@ interface EnhancedClaimFormState extends ClaimFormState {
 
         <p-divider></p-divider>
 
-        <h5>Service Lines</h5>
-        <p-table [value]="formState?.services?.lineItems || []" styleClass="p-datatable-sm">
+        <h5>Service Lines ({{ (formState?.services?.lineItems || []).length }} items)</h5>
+        <p-table [value]="formState?.services?.lineItems || []" styleClass="p-datatable-sm" [scrollable]="true" scrollHeight="400px">
           <ng-template pTemplate="header">
             <tr>
-              <th>#</th>
-              <th>Procedure</th>
-              <th>Modifiers</th>
-              <th>Date</th>
-              <th>Qty</th>
-              <th class="text-right">Charged</th>
+              <th style="width: 50px">#</th>
+              <th style="width: 120px">Code</th>
+              <th>Description</th>
+              <th style="width: 80px">Qty</th>
+              <th style="width: 100px" class="text-right">Unit Price</th>
+              <th style="width: 120px" class="text-right">Amount</th>
             </tr>
           </ng-template>
           <ng-template pTemplate="body" let-line let-i="rowIndex">
             <tr>
               <td>{{ i + 1 }}</td>
-              <td>{{ line.procedureCode }}</td>
-              <td>{{ line.modifiers?.join(', ') || '-' }}</td>
-              <td>{{ line.serviceDate | date:'shortDate' }}</td>
-              <td>{{ line.quantity }}</td>
-              <td class="text-right">{{ line.chargedAmount | currency }}</td>
+              <td>{{ line.procedureCode || '-' }}</td>
+              <td>{{ line.description || line.procedureCode || '-' }}</td>
+              <td>{{ line.quantity || 1 }}</td>
+              <td class="text-right">{{ line.unitPrice | currency:'INR':'symbol':'1.2-2' }}</td>
+              <td class="text-right">{{ line.chargedAmount | currency:'INR':'symbol':'1.2-2' }}</td>
             </tr>
           </ng-template>
           <ng-template pTemplate="footer">
-            <tr>
+            <tr class="font-bold">
               <td colspan="5" class="text-right"><strong>Total Charged:</strong></td>
-              <td class="text-right"><strong>{{ totalCharged() | currency }}</strong></td>
+              <td class="text-right"><strong>{{ totalCharged() | currency:'INR':'symbol':'1.2-2' }}</strong></td>
             </tr>
           </ng-template>
         </p-table>
@@ -699,18 +699,25 @@ export class StepReviewComponent {
   }
 
   onSaveDraft(): void {
-    if (!this.formState) return;
+    if (!this.formState) {
+      console.warn('Cannot save draft: formState is not available');
+      return;
+    }
 
+    console.log('Saving draft...');
     this.saving.set(true);
     this.submitError.set(null);
 
     // Build claim data (would be used with actual API)
-    this.buildClaimCreate();
+    const claimData = this.buildClaimCreate();
+    console.log('Draft claim data:', claimData);
 
-    // Would call API to save draft
+    // Mock API call to save draft
     setTimeout(() => {
+      const draftId = 'draft-' + Date.now();
+      console.log('Draft saved successfully:', draftId);
       this.saving.set(false);
-      this.draftSaved.emit('draft-' + Date.now());
+      this.draftSaved.emit(draftId);
     }, 1000);
   }
 

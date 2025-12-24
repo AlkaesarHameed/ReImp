@@ -1184,6 +1184,345 @@ async def websocket_document_progress(
 
 
 # =============================================================================
+# Visual Extraction Display Endpoints
+# Source: Design Document 10 - Visual Extraction Display
+# =============================================================================
+
+# In-memory storage for page images (for demo/dev)
+_page_images_cache: dict[str, dict[int, bytes]] = {}
+
+
+def store_page_images(document_id: str, images: dict[int, bytes]) -> None:
+    """Store page images in memory cache."""
+    _page_images_cache[document_id] = images
+
+
+def get_page_image_cached(document_id: str, page_number: int) -> Optional[bytes]:
+    """Get page image from memory cache."""
+    doc_images = _page_images_cache.get(document_id, {})
+    return doc_images.get(page_number)
+
+
+@router.post(
+    "/quick-extract",
+    response_model_by_alias=True,
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(require_permission("documents:upload"))],
+)
+async def quick_extract(
+    file: UploadFile = File(..., description="Document file to extract"),
+    return_images: bool = Form(True, description="Store page images for display"),
+    session: AsyncSession = Depends(get_session),
+):
+    """
+    Perform quick OCR extraction with bounding boxes.
+
+    This endpoint extracts text from documents with position information
+    but does NOT perform LLM parsing. Used for the Visual Extraction Display step.
+
+    Returns text regions with normalized bounding box coordinates (0-1) for
+    accurate overlay rendering on the document image.
+
+    Source: Design Document 10 - Visual Extraction Display
+    Verified: 2025-12-24
+    """
+    from src.schemas.extraction import (
+        QuickExtractionResponse,
+        PageExtraction,
+        TextRegion,
+        BoundingBox,
+        TableExtraction,
+    )
+
+    tenant_id = get_current_tenant_id()
+    if not tenant_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Tenant context required",
+        )
+
+    # Validate file
+    if not file.filename:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Filename is required",
+        )
+
+    if not file.content_type:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Content type is required",
+        )
+
+    # Check file size (50MB limit)
+    max_size = 50 * 1024 * 1024
+    contents = await file.read()
+    if len(contents) > max_size:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail=f"File size exceeds maximum of {max_size} bytes",
+        )
+
+    try:
+        from src.services.document_processor import get_document_processor
+        import time
+        from uuid import uuid4
+
+        start_time = time.time()
+        document_id = str(uuid4())
+        processor = get_document_processor()
+        await processor.initialize()
+
+        # Convert PDF to images if necessary
+        if file.content_type == "application/pdf":
+            image_bytes_list = await processor._convert_pdf_to_images(contents)
+            logger.info(f"Quick extract: Converted PDF to {len(image_bytes_list)} page images")
+        else:
+            image_bytes_list = [contents]
+
+        # Store page images for later retrieval
+        if return_images:
+            page_images = {i + 1: img for i, img in enumerate(image_bytes_list)}
+            store_page_images(document_id, page_images)
+
+        # Process each page with OCR
+        pages = []
+        tables = []
+        total_confidence = 0.0
+        total_regions = 0
+
+        for page_num, image_bytes in enumerate(image_bytes_list, 1):
+            # Get image dimensions
+            from PIL import Image
+            import io
+
+            img = Image.open(io.BytesIO(image_bytes))
+            width, height = img.size
+
+            # Call OCR pipeline
+            ocr_result = await processor._ocr.process_document(
+                document_id=f"{document_id}_page{page_num}",
+                image_data=image_bytes,
+                document_type=DocumentType.OTHER,
+                filename=f"page_{page_num}.png",
+            )
+
+            # Convert OCR regions to API format with normalized coordinates
+            regions = []
+            if ocr_result.pages:
+                page_result = ocr_result.pages[0]  # Single page result
+                for i, region in enumerate(page_result.regions):
+                    # Convert bbox (x, y, w, h) to normalized 0-1 coordinates
+                    bbox = region.bbox
+                    normalized_box = BoundingBox(
+                        x=max(0.0, min(1.0, bbox[0] / width)),
+                        y=max(0.0, min(1.0, bbox[1] / height)),
+                        width=max(0.0, min(1.0, bbox[2] / width)),
+                        height=max(0.0, min(1.0, bbox[3] / height)),
+                    )
+
+                    text_region = TextRegion(
+                        id=f"r{page_num}_{i}",
+                        text=region.text,
+                        confidence=region.confidence,
+                        bounding_box=normalized_box,
+                        category=None,  # No LLM parsing in quick extract
+                        field_name=None,
+                    )
+                    regions.append(text_region)
+                    total_confidence += region.confidence
+                    total_regions += 1
+
+                # Extract tables from this page
+                for table in page_result.tables:
+                    if table.bbox:
+                        table_box = BoundingBox(
+                            x=max(0.0, min(1.0, table.bbox[0] / width)),
+                            y=max(0.0, min(1.0, table.bbox[1] / height)),
+                            width=max(0.0, min(1.0, table.bbox[2] / width)),
+                            height=max(0.0, min(1.0, table.bbox[3] / height)),
+                        )
+                    else:
+                        table_box = BoundingBox(x=0.1, y=0.1, width=0.8, height=0.3)
+
+                    table_data = table.to_dict()
+                    tables.append(TableExtraction(
+                        page_number=page_num,
+                        bounding_box=table_box,
+                        headers=table_data["rows"][0] if table_data["rows"] else [],
+                        rows=table_data["rows"][1:] if len(table_data["rows"]) > 1 else [],
+                        confidence=table.confidence,
+                    ))
+
+            # Build page image URL
+            image_url = f"/api/v1/documents/{document_id}/page/{page_num}/image"
+
+            page_extraction = PageExtraction(
+                page_number=page_num,
+                width=width,
+                height=height,
+                image_url=image_url,
+                regions=regions,
+            )
+            pages.append(page_extraction)
+
+        # Calculate overall confidence
+        overall_confidence = total_confidence / total_regions if total_regions > 0 else 0.0
+        processing_time_ms = int((time.time() - start_time) * 1000)
+
+        response = QuickExtractionResponse(
+            document_id=document_id,
+            filename=file.filename,
+            total_pages=len(pages),
+            overall_confidence=overall_confidence,
+            processing_time_ms=processing_time_ms,
+            pages=pages,
+            tables=tables,
+        )
+
+        logger.info(
+            f"Quick extract complete: {document_id}, "
+            f"{len(pages)} pages, {total_regions} regions, "
+            f"confidence: {overall_confidence:.2%}"
+        )
+
+        return response
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Quick extraction error: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to extract document: {str(e)}",
+        )
+
+
+@router.get(
+    "/{document_id}/page/{page_number}/image",
+    dependencies=[Depends(require_permission("documents:read"))],
+    responses={
+        200: {
+            "description": "Page image",
+            "content": {"image/png": {}, "image/jpeg": {}},
+        },
+        404: {"description": "Page not found"},
+    },
+)
+async def get_page_image(
+    document_id: str,
+    page_number: int,
+    width: int = Query(800, ge=100, le=4000, description="Image width in pixels"),
+    format: Literal["png", "jpeg"] = Query("png", description="Image format"),
+) -> Response:
+    """
+    Get a single page of the document as an image.
+
+    Returns the page rendered at the specified width, maintaining aspect ratio.
+    Images are cached in memory during the session for fast retrieval.
+
+    Source: Design Document 10 - Visual Extraction Display
+    Verified: 2025-12-24
+    """
+    # Get cached image
+    image_bytes = get_page_image_cached(document_id, page_number)
+
+    if not image_bytes:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Page {page_number} not found for document {document_id}",
+        )
+
+    try:
+        from PIL import Image
+        import io
+
+        # Open and resize image
+        img = Image.open(io.BytesIO(image_bytes))
+        original_width, original_height = img.size
+
+        # Calculate new height maintaining aspect ratio
+        if original_width != width:
+            ratio = width / original_width
+            new_height = int(original_height * ratio)
+            img = img.resize((width, new_height), Image.Resampling.LANCZOS)
+
+        # Convert to requested format
+        output = io.BytesIO()
+        if format == "jpeg":
+            # Convert to RGB if necessary (JPEG doesn't support alpha)
+            if img.mode in ("RGBA", "LA", "P"):
+                img = img.convert("RGB")
+            img.save(output, format="JPEG", quality=85)
+            media_type = "image/jpeg"
+        else:
+            img.save(output, format="PNG")
+            media_type = "image/png"
+
+        output.seek(0)
+
+        return Response(
+            content=output.read(),
+            media_type=media_type,
+            headers={
+                "Cache-Control": "private, max-age=300",  # 5 minute cache
+                "X-Page-Number": str(page_number),
+                "X-Original-Width": str(original_width),
+                "X-Original-Height": str(original_height),
+            },
+        )
+
+    except Exception as e:
+        logger.error(f"Error rendering page image: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to render page image",
+        )
+
+
+@router.get(
+    "/{document_id}/pages/thumbnails",
+    dependencies=[Depends(require_permission("documents:read"))],
+)
+async def get_page_thumbnails(
+    document_id: str,
+    width: int = Query(200, ge=50, le=400, description="Thumbnail width"),
+):
+    """
+    Get thumbnail URLs for all pages of a document.
+
+    Returns URLs that can be used to fetch thumbnail images for page navigation.
+
+    Source: Design Document 10 - Visual Extraction Display
+    Verified: 2025-12-24
+    """
+    from src.schemas.extraction import PageThumbnailsResponse, PageThumbnail
+
+    # Check if document exists in cache
+    doc_images = _page_images_cache.get(document_id, {})
+
+    if not doc_images:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Document {document_id} not found",
+        )
+
+    thumbnails = [
+        PageThumbnail(
+            page_number=page_num,
+            url=f"/api/v1/documents/{document_id}/page/{page_num}/image?width={width}",
+        )
+        for page_num in sorted(doc_images.keys())
+    ]
+
+    return PageThumbnailsResponse(
+        document_id=document_id,
+        total_pages=len(thumbnails),
+        thumbnails=thumbnails,
+    )
+
+
+# =============================================================================
 # Delete Endpoint
 # =============================================================================
 

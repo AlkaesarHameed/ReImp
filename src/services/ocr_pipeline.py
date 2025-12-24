@@ -302,7 +302,7 @@ class OCRPipelineService:
             processing_time_ms=processing_time,
             metadata={
                 "filename": filename,
-                "document_type": document_type.value,
+                "document_type": document_type.value if hasattr(document_type, 'value') else str(document_type),
                 "processed_at": datetime.now(timezone.utc).isoformat(),
             },
         )

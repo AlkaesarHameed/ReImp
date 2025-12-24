@@ -18,6 +18,7 @@ import logging
 import re
 from dataclasses import dataclass, field
 from datetime import date, datetime, timezone
+import decimal
 from decimal import Decimal
 from enum import Enum
 from typing import Any, Optional
@@ -104,6 +105,23 @@ class ExtractedPatient:
 
 
 @dataclass
+class ExtractedLineItem:
+    """Extracted invoice line item (medications, supplies, services)."""
+
+    sl_no: int = 0
+    date: Optional[date] = None
+    description: str = ""
+    sac_code: str = ""
+    quantity: float = 1.0
+    rate: Optional[Decimal] = None
+    gross_value: Optional[Decimal] = None
+    discount: Optional[Decimal] = None
+    total_value: Optional[Decimal] = None
+    category: str = ""  # e.g., "Inventory Item", "Service", "Surgeon Fees"
+    confidence: float = 0.0
+
+
+@dataclass
 class ClaimExtractionResult:
     """Complete claim extraction result."""
 
@@ -118,6 +136,7 @@ class ClaimExtractionResult:
 
     diagnoses: list[ExtractedDiagnosis] = field(default_factory=list)
     procedures: list[ExtractedProcedure] = field(default_factory=list)
+    line_items: list[ExtractedLineItem] = field(default_factory=list)
 
     # Financial
     total_charged: Optional[Decimal] = None
@@ -171,38 +190,123 @@ class LLMParserConfig:
 # Extraction Prompts
 # =============================================================================
 
-CLAIM_EXTRACTION_PROMPT = """You are a medical claims data extraction expert. Extract structured data from the following OCR text of a {document_type} document.
+CLAIM_EXTRACTION_PROMPT = """You are a medical claims and invoice data extraction expert. Extract ALL structured data from the following {document_type} document.
 
-OCR TEXT:
-{ocr_text}
+{ocr_text_section}
 
-Extract the following fields and return as JSON:
-1. patient_info: name, member_id, date_of_birth (YYYY-MM-DD), gender, address
-2. provider_info: name, npi (10 digits), tax_id, address, phone, specialty
-3. billing_provider: same fields as provider if different
-4. diagnoses: array of {{code, description, is_primary}}
-5. procedures: array of {{code, description, modifiers[], quantity, charged_amount, service_date}}
-6. financial: total_charged, currency
-7. dates: service_date_from, service_date_to, admission_date, discharge_date
-8. identifiers: claim_number, prior_auth_number, policy_number, group_number
-9. place_of_service: code and facility_name
-10. claim_type: "professional" (CMS-1500) or "institutional" (UB-04)
+=== CRITICAL INSTRUCTIONS - READ CAREFULLY ===
 
-For each field, also provide a confidence score (0.0-1.0) based on OCR quality and data clarity.
+**IMPORTANT: UNDERSTAND THE DIFFERENCE BETWEEN PROCEDURES AND LINE_ITEMS**
 
-Return ONLY valid JSON with this structure:
+1. **line_items** = ALL itemized charges from invoices/bills (medications, supplies, room charges, tests, fees, etc.)
+   - This is the MAIN array for hospital bills and invoices
+   - Extract EVERY SINGLE ROW from the billing table
+   - Includes: medicines, injections, needles, syringes, bed charges, surgery fees, lab tests, etc.
+
+2. **procedures** = Medical/surgical procedures with CPT codes (e.g., 99213 Office Visit, 43239 Endoscopy)
+   - Only for formal medical procedure codes
+   - Usually NOT present in simple invoices/bills
+   - Leave EMPTY if the document is an itemized bill without CPT codes
+
+=== LINE ITEMS EXTRACTION (MOST IMPORTANT) ===
+
+For invoices/hospital bills, extract EVERY ROW from the itemized table into line_items:
+- Medications/drugs (e.g., "PARACETAMOL 500MG", "OFLOX 4MG INJ")
+- Medical supplies (e.g., "NEEDLE 18X1.5G", "SYRINGE 5ML", "IV CANNULA")
+- Lab tests (e.g., "BLOOD TEST", "URINE ANALYSIS")
+- Room charges (e.g., "BED CHARGE", "ICU CHARGE")
+- Doctor fees (e.g., "SURGEON FEES", "CONSULTATION")
+- Services (e.g., "NURSING CARE", "OT CHARGES")
+- Any other itemized charge
+
+For each LINE ITEM extract:
+- sl_no: Row/serial number from table (1, 2, 3...)
+- date: Service date
+- description: Item name/description
+- sac_code: SAC/HSN code or item code (e.g., "9018", "3004")
+- quantity: Qty (default 1)
+- rate: Unit rate/price
+- gross_value: Amount before discount
+- discount: Discount amount (0 if none)
+- total_value: Final amount
+- category: Category like "Pharmacy", "Inventory Item", "Surgeon Fees", "Bed Charge", etc.
+
+=== DIAGNOSIS EXTRACTION ===
+
+Extract ALL diagnoses mentioned:
+- Look for: "Diagnosis", "Dx", "Primary Diagnosis", "Chief Complaint", "Condition"
+- Extract ICD-10 codes if present, otherwise just description
+- Mark first diagnosis as is_primary: true
+
+=== JSON OUTPUT FORMAT ===
+
 {{
-    "patient_info": {{}},
-    "provider_info": {{}},
-    "diagnoses": [],
+    "patient_info": {{
+        "name": "full patient name",
+        "member_id": "insurance/member ID",
+        "date_of_birth": "YYYY-MM-DD",
+        "gender": "M/F",
+        "address": "full address",
+        "age": "age in years",
+        "uhid_no": "hospital UHID"
+    }},
+    "provider_info": {{
+        "name": "hospital/clinic name",
+        "npi": "NPI if available",
+        "tax_id": "GSTIN/Tax ID",
+        "address": "address",
+        "phone": "phone",
+        "specialty": "specialty",
+        "department": "department",
+        "doctor_name": "treating doctor name"
+    }},
+    "diagnoses": [
+        {{"code": "ICD-10 code or empty", "description": "diagnosis description", "is_primary": true}}
+    ],
     "procedures": [],
-    "financial": {{}},
-    "dates": {{}},
-    "identifiers": {{}},
-    "place_of_service": {{}},
-    "claim_type": "",
-    "overall_confidence": 0.0
-}}"""
+    "line_items": [
+        {{"sl_no": 1, "date": "2025-12-08", "description": "NEEDLE 18X1.5G", "sac_code": "9018", "quantity": 3, "rate": "3.40", "gross_value": "10.20", "discount": "0.00", "total_value": "10.20", "category": "Inventory Item"}},
+        {{"sl_no": 2, "date": "2025-12-08", "description": "OFLOX 4MG INJ", "sac_code": "3004", "quantity": 1, "rate": "12.72", "gross_value": "12.72", "discount": "0.00", "total_value": "12.72", "category": "Pharmacy"}}
+    ],
+    "financial": {{
+        "total_charged": "grand total",
+        "subtotal": "subtotal before discount",
+        "discount_total": "total discount",
+        "tax": "GST/tax amount",
+        "currency": "INR",
+        "bill_amount": "final bill amount",
+        "patient_share": "patient payable",
+        "amount_paid": "amount already paid"
+    }},
+    "dates": {{
+        "service_date_from": "start date",
+        "service_date_to": "end date",
+        "admission_date": "admission date",
+        "discharge_date": "discharge date",
+        "bill_date": "bill date"
+    }},
+    "identifiers": {{
+        "claim_number": "claim/reference number",
+        "prior_auth_number": "prior auth",
+        "policy_number": "policy number",
+        "group_number": "group number",
+        "bill_no": "bill/invoice number",
+        "uhid_no": "UHID"
+    }},
+    "place_of_service": {{
+        "code": "POS code",
+        "facility_name": "facility name",
+        "ward": "ward name"
+    }},
+    "claim_type": "invoice",
+    "overall_confidence": 0.85
+}}
+
+**CRITICAL REMINDER**:
+- Put ALL itemized charges (medicines, supplies, fees, etc.) in "line_items" array
+- Leave "procedures" array EMPTY unless there are actual CPT procedure codes
+- If there are 60 line items in the invoice, return ALL 60 in the line_items array
+- Do NOT summarize or skip any items"""
 
 INVOICE_EXTRACTION_PROMPT = """Extract invoice data from the following OCR text:
 
@@ -310,10 +414,22 @@ class LLMParserService:
         start_time = datetime.now(timezone.utc)
 
         try:
+            # Build OCR text section - include guidance if no OCR text
+            if ocr_text and len(ocr_text.strip()) > 0:
+                ocr_text_section = f"OCR TEXT:\n{ocr_text[:15000]}"  # Increased limit
+            else:
+                ocr_text_section = """NOTE: No OCR text available. Please extract all data directly from the image.
+Carefully examine the entire document including:
+- Header information (hospital name, bill number, patient details)
+- ALL table rows with line items
+- ALL inventory items, medications, services, and charges
+- Summary totals and subtotals
+- Footer information"""
+
             # Build prompt
             prompt = CLAIM_EXTRACTION_PROMPT.format(
                 document_type=document_type.value,
-                ocr_text=ocr_text[:10000],  # Limit text length
+                ocr_text_section=ocr_text_section,
             )
 
             # Call LLM
@@ -383,7 +499,8 @@ class LLMParserService:
                     system_prompt=system_prompt,
                 )
             # Override settings for extraction
-            request.max_tokens = 4000
+            # Increased max_tokens for documents with many line items (60+ items need ~10K tokens)
+            request.max_tokens = 16000
             request.temperature = 0.1  # Low temperature for consistent extraction
 
             result = await asyncio.wait_for(
@@ -414,28 +531,54 @@ class LLMParserService:
 
     def _extract_json(self, text: str) -> dict:
         """Extract JSON from LLM response text."""
+        print(f"[JSON EXTRACT] Response length: {len(text)} chars")
+        print(f"[JSON EXTRACT] First 500 chars: {text[:500]}")
+
         # Try direct parse
         try:
-            return json.loads(text)
-        except json.JSONDecodeError:
-            pass
+            result = json.loads(text)
+            print(f"[JSON EXTRACT] Direct parse succeeded, keys: {list(result.keys()) if isinstance(result, dict) else 'not a dict'}")
+            return result
+        except json.JSONDecodeError as e:
+            logger.debug(f"[JSON EXTRACT] Direct parse failed: {e}")
 
-        # Try to find JSON in markdown code block
-        json_match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", text, re.DOTALL)
+        # Try to find JSON in markdown code block (greedy match for nested braces)
+        json_match = re.search(r"```(?:json)?\s*(\{[\s\S]*?\})\s*```", text, re.DOTALL)
         if json_match:
             try:
-                return json.loads(json_match.group(1))
-            except json.JSONDecodeError:
-                pass
+                result = json.loads(json_match.group(1))
+                logger.info(f"[JSON EXTRACT] Markdown block parse succeeded, keys: {list(result.keys()) if isinstance(result, dict) else 'not a dict'}")
+                return result
+            except json.JSONDecodeError as e:
+                logger.debug(f"[JSON EXTRACT] Markdown block parse failed: {e}")
 
-        # Try to find raw JSON object
-        json_match = re.search(r"\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}", text, re.DOTALL)
-        if json_match:
-            try:
-                return json.loads(json_match.group(0))
-            except json.JSONDecodeError:
-                pass
+        # Try to find the largest JSON object in the text
+        # This handles nested objects properly
+        brace_count = 0
+        start_idx = -1
+        for i, char in enumerate(text):
+            if char == '{':
+                if brace_count == 0:
+                    start_idx = i
+                brace_count += 1
+            elif char == '}':
+                brace_count -= 1
+                if brace_count == 0 and start_idx >= 0:
+                    json_str = text[start_idx:i+1]
+                    try:
+                        result = json.loads(json_str)
+                        logger.info(f"[JSON EXTRACT] Brace matching succeeded, keys: {list(result.keys()) if isinstance(result, dict) else 'not a dict'}")
+                        if isinstance(result, dict):
+                            logger.info(f"[JSON EXTRACT] line_items count: {len(result.get('line_items', []))}")
+                            logger.info(f"[JSON EXTRACT] procedures count: {len(result.get('procedures', []))}")
+                        return result
+                    except json.JSONDecodeError as e:
+                        logger.debug(f"[JSON EXTRACT] Brace matching parse failed: {e}")
+                        # Continue looking for another JSON object
+                        start_idx = -1
+                        continue
 
+        logger.warning(f"[JSON EXTRACT] Failed to extract JSON from response")
         return {}
 
     async def _build_extraction_result(
@@ -492,30 +635,91 @@ class LLMParserService:
                     ))
                     result.fields_extracted += 1
 
-        # Extract procedures
+        # Extract line items FIRST (for invoices with itemized charges)
+        # This is the primary array for invoice/bill data
+        line_items_data = extracted.get("line_items", [])
+        print(f"[EXTRACT] LLM returned {len(line_items_data) if isinstance(line_items_data, list) else 'non-list'} line_items")
+        if isinstance(line_items_data, list):
+            for idx, item in enumerate(line_items_data):
+                if not isinstance(item, dict):
+                    continue
+                try:
+                    line_item = ExtractedLineItem(
+                        sl_no=int(item.get("sl_no", idx + 1) or idx + 1),
+                        date=self._parse_date(item.get("date")),
+                        description=str(item.get("description", "")),
+                        sac_code=str(item.get("sac_code", "")),
+                        quantity=float(item.get("quantity", 1) or 1),
+                        rate=self._parse_decimal(item.get("rate")),
+                        gross_value=self._parse_decimal(item.get("gross_value")),
+                        discount=self._parse_decimal(item.get("discount")),
+                        total_value=self._parse_decimal(item.get("total_value") or item.get("charged_amount")),
+                        category=str(item.get("category", "")),
+                        confidence=float(item.get("confidence", 0.8)),
+                    )
+                    result.line_items.append(line_item)
+                    result.fields_extracted += 1
+                except (ValueError, TypeError) as e:
+                    logger.warning(f"Failed to parse line item {idx}: {e}")
+                    continue
+
+        # Extract procedures - but convert non-CPT items to line_items
         procedures_data = extracted.get("procedures", [])
+        print(f"[EXTRACT] LLM returned {len(procedures_data) if isinstance(procedures_data, list) else 'non-list'} procedures")
         if not isinstance(procedures_data, list):
             procedures_data = []
-        for proc in procedures_data:
+
+        for idx, proc in enumerate(procedures_data):
             if not isinstance(proc, dict):
                 continue
             charged = proc.get("charged_amount")
-            result.procedures.append(ExtractedProcedure(
-                code=proc.get("code", ""),
-                description=proc.get("description", ""),
-                code_system=ProcedureCodeSystem.CPT,
-                modifiers=proc.get("modifiers", []),
-                quantity=int(proc.get("quantity", 1) or 1),
-                charged_amount=Decimal(str(charged)) if charged else None,
-                service_date=self._parse_date(proc.get("service_date")),
-                confidence=float(proc.get("confidence", 0.8)),
-            ))
-            result.fields_extracted += 1
+            code = proc.get("code", "")
+
+            # Check if this is a real CPT procedure code (5 digits) or just an invoice item
+            # CPT codes are 5 digits, HCPCS are 5 chars starting with letter
+            is_cpt_code = code and len(str(code)) == 5 and str(code).isdigit()
+            is_hcpcs_code = code and len(str(code)) == 5 and str(code)[0].isalpha()
+
+            if is_cpt_code or is_hcpcs_code:
+                # This is a real medical procedure code - add to procedures
+                result.procedures.append(ExtractedProcedure(
+                    code=str(code),
+                    description=proc.get("description", ""),
+                    code_system=ProcedureCodeSystem.CPT,
+                    modifiers=proc.get("modifiers", []),
+                    quantity=int(proc.get("quantity", 1) or 1),
+                    charged_amount=self._parse_decimal(charged),
+                    service_date=self._parse_date(proc.get("service_date")),
+                    confidence=float(proc.get("confidence", 0.8)),
+                ))
+                result.fields_extracted += 1
+            else:
+                # This is an invoice line item incorrectly placed in procedures
+                # Convert it to a line_item
+                print(f"[EXTRACT] Converting procedure '{proc.get('description')}' to line_item (no valid CPT code)")
+                try:
+                    line_item = ExtractedLineItem(
+                        sl_no=len(result.line_items) + 1,
+                        date=self._parse_date(proc.get("service_date")),
+                        description=str(proc.get("description", "")),
+                        sac_code=str(code) if code else "",
+                        quantity=float(proc.get("quantity", 1) or 1),
+                        rate=None,
+                        gross_value=self._parse_decimal(charged),
+                        discount=None,
+                        total_value=self._parse_decimal(charged),
+                        category="",  # Unknown category from procedure
+                        confidence=float(proc.get("confidence", 0.8)),
+                    )
+                    result.line_items.append(line_item)
+                    result.fields_extracted += 1
+                except (ValueError, TypeError) as e:
+                    logger.warning(f"Failed to convert procedure to line item: {e}")
 
         # Extract financial
         financial = extracted.get("financial", {})
         if financial.get("total_charged"):
-            result.total_charged = Decimal(str(financial["total_charged"]))
+            result.total_charged = self._parse_decimal(financial["total_charged"])
             result.currency = financial.get("currency", "USD")
             result.fields_extracted += 1
 
@@ -598,10 +802,14 @@ class LLMParserService:
 
         formats = [
             "%Y-%m-%d",
-            "%m/%d/%Y",
+            "%d-%m-%Y",  # Common in Indian invoices (08-12-2025)
             "%d/%m/%Y",
+            "%m/%d/%Y",
             "%Y%m%d",
             "%m-%d-%Y",
+            "%d.%m.%Y",
+            "%d %b %Y",  # 08 Dec 2025
+            "%d %B %Y",  # 08 December 2025
         ]
 
         for fmt in formats:
@@ -611,6 +819,29 @@ class LLMParserService:
                 continue
 
         return None
+
+    def _parse_decimal(self, value: Any) -> Optional[Decimal]:
+        """Parse various numeric formats to Decimal."""
+        if value is None:
+            return None
+        try:
+            # Handle string with commas (e.g., "1,125.00" or "1,17,550.00")
+            if isinstance(value, str):
+                # Remove commas, currency symbols, spaces, and any non-numeric chars except . and -
+                cleaned = value.replace(",", "").replace("₹", "").replace("$", "").replace(" ", "").strip()
+                if not cleaned:
+                    return None
+                # Remove any characters that aren't digits, decimal point, or minus
+                import re
+                cleaned = re.sub(r'[^\d.\-]', '', cleaned)
+                if not cleaned or cleaned == '-' or cleaned == '.':
+                    return None
+                return Decimal(cleaned)
+            # Handle float/int
+            return Decimal(str(value))
+        except Exception:
+            # Catch all decimal parsing errors
+            return None
 
     def _classify_confidence(self, confidence: float) -> ExtractionConfidence:
         """Classify overall confidence level."""

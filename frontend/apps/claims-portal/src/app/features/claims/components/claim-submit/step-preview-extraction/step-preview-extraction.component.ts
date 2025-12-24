@@ -964,10 +964,12 @@ export class StepPreviewExtractionComponent {
   });
 
   readonly procedureCodes = computed((): CodeItem[] => {
-    const procedures = this.mergedExtractedData()?.procedures;
-    if (!procedures) return [];
+    const data = this.mergedExtractedData();
+    const procedures = data?.procedures || [];
+    const lineItems = (data as any)?.line_items || [];
 
-    return procedures.map(proc => ({
+    // Map standard procedures
+    const procedureItems = procedures.map(proc => ({
       code: proc.code,
       description: proc.description,
       confidence: proc.confidence,
@@ -976,6 +978,21 @@ export class StepPreviewExtractionComponent {
       chargedAmount: proc.charged_amount,
       serviceDate: proc.service_date,
     }));
+
+    // Map invoice line items (from hospital bills, invoices)
+    const invoiceItems = lineItems.map((item: any) => ({
+      code: item.sac_code || item.sl_no?.toString() || '',
+      description: item.description,
+      confidence: item.confidence,
+      modifiers: [],
+      quantity: item.quantity,
+      chargedAmount: item.total_value || item.gross_value,
+      serviceDate: item.date,
+      category: item.category,
+    }));
+
+    // Return invoice items if present, otherwise procedures
+    return invoiceItems.length > 0 ? invoiceItems : procedureItems;
   });
 
   readonly processedDocuments = computed(() => {

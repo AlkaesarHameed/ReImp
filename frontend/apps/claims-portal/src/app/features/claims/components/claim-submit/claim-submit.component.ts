@@ -3,10 +3,19 @@
  * Source: Phase 3 Implementation Document
  * Source: Design Document Section 3.4
  * Source: Design Document - 02_enhanced_claims_input_design.md
- * Verified: 2025-12-19
+ * Source: Design Document 10 - Visual Extraction Display
+ * Verified: 2025-12-24
  *
  * Multi-step wizard for claim submission with document upload and processing.
- * Orchestrates Member, Policy Docs, Claim Docs, Processing, and Review steps.
+ * Orchestrates Upload, Visual Extraction, Processing, Preview, Review, and Submit steps.
+ *
+ * 6-Step Flow:
+ * 0. Upload Documents
+ * 1. Visual Extraction Display (NEW - source-faithful OCR visualization)
+ * 2. Processing (OCR + LLM parsing)
+ * 3. Preview Extraction (structured data cards)
+ * 4. Review Data
+ * 5. Submit
  */
 import {
   Component,
@@ -39,18 +48,22 @@ import { InterfaceSwitcherService } from '../../../../core/services/interface-sw
 
 import { PolicyDocsStepData } from './step-policy-docs/step-policy-docs.component';
 import { StepClaimDocsComponent, ClaimDocsStepData } from './step-claim-docs/step-claim-docs.component';
+import { StepVisualExtractionComponent, QuickExtractionResponse } from './step-visual-extraction/step-visual-extraction.component';
 import { StepProcessingComponent, ProcessingStepData } from './step-processing/step-processing.component';
 import { StepPreviewExtractionComponent } from './step-preview-extraction/step-preview-extraction.component';
 import { StepReviewComponent } from './step-review/step-review.component';
 
 /**
  * Extended claim form state with document processing data.
+ * Updated to include visual extraction result for the new step.
  */
 interface EnhancedClaimFormState extends ClaimFormState {
   policyDocuments: DocumentUploadState[];
   claimDocuments: DocumentUploadState[];
   mergedExtractedData: MergedExtractedData | null;
   policyDocsSkipped: boolean;
+  /** Visual extraction result from quick-extract endpoint */
+  visualExtractionResult: QuickExtractionResponse | null;
 }
 
 @Component({
@@ -64,6 +77,7 @@ interface EnhancedClaimFormState extends ClaimFormState {
     ConfirmDialogModule,
     ToastModule,
     StepClaimDocsComponent,
+    StepVisualExtractionComponent,
     StepProcessingComponent,
     StepPreviewExtractionComponent,
     StepReviewComponent,
@@ -96,12 +110,12 @@ interface EnhancedClaimFormState extends ClaimFormState {
         styleClass="wizard-steps"
       ></p-steps>
 
-      <!-- Step Content - New 5-step flow with Preview step -->
-      <!-- Source: Design Doc 08 - Document Extraction Preview Step -->
+      <!-- Step Content - New 6-step flow with Visual Extraction step -->
+      <!-- Source: Design Doc 10 - Visual Extraction Display -->
       <div class="wizard-content">
         @switch (currentStep()) {
           @case (0) {
-            <!-- Step 1: Upload Documents (combining all document uploads) -->
+            <!-- Step 0: Upload Documents (combining all document uploads) -->
             <app-step-claim-docs
               [initialData]="getClaimDocsData()"
               (stepComplete)="onDocumentsComplete($event)"
@@ -110,6 +124,14 @@ interface EnhancedClaimFormState extends ClaimFormState {
             />
           }
           @case (1) {
+            <!-- Step 1: Visual Extraction Display - Source-faithful OCR visualization -->
+            <app-step-visual-extraction
+              [documents]="enhancedFormState().claimDocuments"
+              (stepComplete)="onVisualExtractionComplete($event)"
+              (stepBack)="goBack()"
+            />
+          }
+          @case (2) {
             <!-- Step 2: Processing - Auto-extraction of data from documents -->
             <app-step-processing
               [policyDocuments]="enhancedFormState().policyDocuments"
@@ -118,7 +140,7 @@ interface EnhancedClaimFormState extends ClaimFormState {
               (stepBack)="goBack()"
             />
           }
-          @case (2) {
+          @case (3) {
             <!-- Step 3: Preview Extraction - Read-only view of extracted data -->
             <app-step-preview-extraction
               [mergedExtractedData]="enhancedFormState().mergedExtractedData"
@@ -128,7 +150,7 @@ interface EnhancedClaimFormState extends ClaimFormState {
               (stepBack)="goBack()"
             />
           }
-          @case (3) {
+          @case (4) {
             <!-- Step 4: Review Data - Edit auto-populated fields (member, provider, services all in one) -->
             <app-step-review
               [formState]="formState()"
@@ -140,7 +162,7 @@ interface EnhancedClaimFormState extends ClaimFormState {
               (proceedToSubmit)="onProceedToSubmit()"
             />
           }
-          @case (4) {
+          @case (5) {
             <!-- Step 5: Submit - Confirmation and final submission -->
             <app-step-review
               [formState]="formState()"
@@ -229,18 +251,21 @@ export class ClaimSubmitComponent implements OnInit, OnDestroy {
   private readonly destroy$ = new Subject<void>();
 
   /**
-   * 5-step wizard flow with Preview step:
-   * 1. Upload Documents - Start with document upload (medical records, invoices)
-   * 2. Processing - Auto-extract patient, provider, diagnoses, services
+   * 6-step wizard flow with Visual Extraction step:
+   * 0. Upload Documents - Start with document upload (medical records, invoices)
+   * 1. Visual Extraction - Source-faithful OCR visualization with bounding boxes
+   * 2. Processing - LLM-based extraction of structured data
    * 3. Preview Extraction - Read-only view of extracted data with confidence scores
    * 4. Review Data - Show all auto-populated data, allow edits
-   * 5. Confirm - Final review and submission
+   * 5. Submit - Final review and submission
    *
-   * Source: Design Doc 08 - Document Extraction Preview Step
-   * The Preview step allows users to review extraction accuracy before editing.
+   * Source: Design Doc 10 - Visual Extraction Display
+   * The Visual Extraction step displays OCR data in document layout format
+   * before structured processing occurs.
    */
   readonly steps: MenuItem[] = [
     { label: 'Upload Documents', icon: 'pi pi-upload' },
+    { label: 'Visual Extraction', icon: 'pi pi-image' },
     { label: 'Processing', icon: 'pi pi-cog' },
     { label: 'Preview Extraction', icon: 'pi pi-eye' },
     { label: 'Review Data', icon: 'pi pi-pencil' },
@@ -255,6 +280,7 @@ export class ClaimSubmitComponent implements OnInit, OnDestroy {
     claimDocuments: [],
     mergedExtractedData: null,
     policyDocsSkipped: false,
+    visualExtractionResult: null,
   });
   readonly isDirty = signal<boolean>(false);
   readonly completedSteps = signal<Set<number>>(new Set());
@@ -292,8 +318,8 @@ export class ClaimSubmitComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Step 0: Documents uploaded - proceed to processing.
-   * In the new flow, this is the first step where user uploads documents.
+   * Step 0: Documents uploaded - proceed to Visual Extraction.
+   * Source: Design Doc 10 - Visual Extraction Display
    */
   onDocumentsComplete(data: ClaimDocsStepData): void {
     this.enhancedFormState.update(state => ({
@@ -301,11 +327,25 @@ export class ClaimSubmitComponent implements OnInit, OnDestroy {
       claimDocuments: data.documents,
     }));
     this.completedSteps.update(set => new Set([...set, 0]));
-    this.currentStep.set(1); // Go to Processing
+    this.currentStep.set(1); // Go to Visual Extraction
   }
 
   /**
-   * Step 1: Processing complete - auto-populate all fields and proceed to review.
+   * Step 1: Visual Extraction complete - proceed to Processing.
+   * Source: Design Doc 10 - Visual Extraction Display
+   * Stores the quick extraction result for potential future use.
+   */
+  onVisualExtractionComplete(result: QuickExtractionResponse): void {
+    this.enhancedFormState.update(state => ({
+      ...state,
+      visualExtractionResult: result,
+    }));
+    this.completedSteps.update(set => new Set([...set, 1]));
+    this.currentStep.set(2); // Go to Processing
+  }
+
+  /**
+   * Step 2: Processing complete - auto-populate all fields and proceed to Preview.
    * This auto-populates member, provider, and services data from extraction.
    */
   onProcessingComplete(data: ProcessingStepData): void {
@@ -330,21 +370,46 @@ export class ClaimSubmitComponent implements OnInit, OnDestroy {
 
     // Auto-populate services data from extraction (if available)
     const today = new Date().toISOString().split('T')[0];
+
+    // Build line items from both procedures AND invoice line_items
+    const procedureLineItems = (mergedData?.procedures || []).map(p => ({
+      procedureCode: p.code || p.description?.substring(0, 20) || '',
+      procedureCodeSystem: 'CPT' as const,
+      modifiers: p.modifiers || [],
+      serviceDate: p.service_date || today,
+      quantity: p.quantity || 1,
+      unitPrice: parseFloat(p.charged_amount || '0') || 0,
+      chargedAmount: parseFloat(p.charged_amount || '0') || 0,
+      diagnosisPointers: [1],
+      description: p.description || '',
+    }));
+
+    // Invoice line items (for hospital bills, invoices with itemized charges)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const invoiceLineItems = ((mergedData as any)?.line_items || []).map((item: any) => ({
+      procedureCode: item.sac_code || item.description?.substring(0, 20) || '',
+      procedureCodeSystem: 'SAC' as const, // SAC code for services
+      modifiers: [],
+      serviceDate: item.date || today,
+      quantity: item.quantity || 1,
+      unitPrice: parseFloat(item.rate || item.total_value || '0') || 0,
+      chargedAmount: parseFloat(item.total_value || '0') || 0,
+      diagnosisPointers: [1],
+      description: item.description || '',
+      category: item.category || '',
+      grossValue: parseFloat(item.gross_value || '0') || 0,
+      discount: parseFloat(item.discount || '0') || 0,
+    }));
+
+    // Combine both types, prefer invoice line items if present
+    const allLineItems = invoiceLineItems.length > 0 ? invoiceLineItems : procedureLineItems;
+
     const servicesData: ServicesStepData = {
-      serviceDateFrom: today,
-      serviceDateTo: today,
+      serviceDateFrom: mergedData?.dates?.service_date_from || today,
+      serviceDateTo: mergedData?.dates?.service_date_to || today,
       primaryDiagnosis: mergedData?.diagnoses?.[0]?.code || '',
       diagnosisCodes: mergedData?.diagnoses?.map(d => d.code) || [],
-      lineItems: mergedData?.procedures?.map(p => ({
-        procedureCode: p.code,
-        procedureCodeSystem: 'CPT' as const,  // Default to CPT, can be updated in review
-        modifiers: p.modifiers || [],
-        serviceDate: today,
-        quantity: 1,
-        unitPrice: 0,  // Will be filled from financial data or user input
-        chargedAmount: 0,  // Will be calculated or entered by user
-        diagnosisPointers: [1],  // Default to first diagnosis
-      })) || [],
+      lineItems: allLineItems,
     };
 
     this.enhancedFormState.update(state => ({
@@ -361,21 +426,21 @@ export class ClaimSubmitComponent implements OnInit, OnDestroy {
       services: servicesData,
     }));
 
-    this.completedSteps.update(set => new Set([...set, 1]));
-    this.currentStep.set(2); // Go to Preview Extraction
+    this.completedSteps.update(set => new Set([...set, 2]));
+    this.currentStep.set(3); // Go to Preview Extraction
   }
 
   /**
-   * Step 2: Preview complete - proceed to review.
+   * Step 3: Preview complete - proceed to review.
    * Source: Design Doc 08 - Preview step is read-only.
    */
   onPreviewComplete(): void {
-    this.completedSteps.update(set => new Set([...set, 2]));
-    this.currentStep.set(3); // Go to Review Data
+    this.completedSteps.update(set => new Set([...set, 3]));
+    this.currentStep.set(4); // Go to Review Data
   }
 
   /**
-   * Step 3: Data updated in review step.
+   * Step 4: Data updated in review step.
    * User can edit any auto-populated fields here.
    */
   onDataUpdated(data: {
@@ -398,11 +463,11 @@ export class ClaimSubmitComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Step 3 -> Step 4: User confirmed review data, proceed to final submission.
+   * Step 4 -> Step 5: User confirmed review data, proceed to final submission.
    */
   onProceedToSubmit(): void {
-    this.completedSteps.update(set => new Set([...set, 3]));
-    this.currentStep.set(4); // Go to Submit
+    this.completedSteps.update(set => new Set([...set, 4]));
+    this.currentStep.set(5); // Go to Submit
   }
 
   // Legacy handlers kept for backward compatibility
@@ -478,10 +543,12 @@ export class ClaimSubmitComponent implements OnInit, OnDestroy {
   }
 
   onDraftSaved(draftId: string): void {
+    console.log('Draft saved event received:', draftId);
     this.messageService.add({
-      severity: 'info',
+      severity: 'success',
       summary: 'Draft Saved',
-      detail: 'Your claim draft has been saved.',
+      detail: 'Your claim draft has been saved successfully.',
+      life: 5000,
     });
     this.isDirty.set(false);
     this.formState.update(state => ({ ...state, draftId }));

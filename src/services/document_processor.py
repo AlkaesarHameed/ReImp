@@ -549,22 +549,71 @@ class DocumentProcessor:
             for dx in parsing_result.diagnoses
         ]
 
-        data["procedures"] = [
-            {
-                "code": proc.code,
-                "description": proc.description,
-                "modifiers": proc.modifiers,
-                "quantity": proc.quantity,
-                "charged_amount": (
-                    str(proc.charged_amount) if proc.charged_amount else None
-                ),
-                "service_date": (
-                    proc.service_date.isoformat() if proc.service_date else None
-                ),
-                "confidence": proc.confidence,
-            }
-            for proc in parsing_result.procedures
-        ]
+        # Separate procedures into real CPT procedures vs invoice line items
+        real_procedures = []
+        converted_line_items = []
+
+        for proc in parsing_result.procedures:
+            code = proc.code
+            # Check if this is a real CPT code (5 digits) or HCPCS (5 chars, starts with letter)
+            is_cpt_code = code and len(str(code)) == 5 and str(code).isdigit()
+            is_hcpcs_code = code and len(str(code)) == 5 and str(code)[0].isalpha()
+
+            if is_cpt_code or is_hcpcs_code:
+                real_procedures.append({
+                    "code": proc.code,
+                    "description": proc.description,
+                    "modifiers": proc.modifiers,
+                    "quantity": proc.quantity,
+                    "charged_amount": str(proc.charged_amount) if proc.charged_amount else None,
+                    "service_date": proc.service_date.isoformat() if proc.service_date else None,
+                    "confidence": proc.confidence,
+                })
+            else:
+                # Convert to line item format
+                converted_line_items.append({
+                    "sl_no": len(converted_line_items) + 1,
+                    "date": proc.service_date.isoformat() if proc.service_date else None,
+                    "description": proc.description,
+                    "sac_code": str(code) if code else "",
+                    "quantity": proc.quantity,
+                    "rate": None,
+                    "gross_value": str(proc.charged_amount) if proc.charged_amount else None,
+                    "discount": None,
+                    "total_value": str(proc.charged_amount) if proc.charged_amount else None,
+                    "category": "",
+                    "confidence": proc.confidence,
+                })
+
+        data["procedures"] = real_procedures
+        logger.info(f"Separated {len(real_procedures)} real procedures and {len(converted_line_items)} line items from procedures array")
+
+        # Extract line items (for invoices with itemized charges)
+        # Start with converted line items from procedures
+        data["line_items"] = converted_line_items.copy()
+
+        # Then add explicitly returned line items from the parser
+        if hasattr(parsing_result, 'line_items') and parsing_result.line_items:
+            explicit_line_items = [
+                {
+                    "sl_no": item.sl_no + len(data["line_items"]),  # Adjust serial number
+                    "date": item.date.isoformat() if item.date else None,
+                    "description": item.description,
+                    "sac_code": item.sac_code,
+                    "quantity": item.quantity,
+                    "rate": str(item.rate) if item.rate else None,
+                    "gross_value": str(item.gross_value) if item.gross_value else None,
+                    "discount": str(item.discount) if item.discount else None,
+                    "total_value": str(item.total_value) if item.total_value else None,
+                    "category": item.category,
+                    "confidence": item.confidence,
+                }
+                for item in parsing_result.line_items
+            ]
+            data["line_items"].extend(explicit_line_items)
+            logger.info(f"Added {len(parsing_result.line_items)} explicit line items from document")
+
+        logger.info(f"Total line items: {len(data['line_items'])}")
 
         if parsing_result.total_charged:
             data["financial"] = {
