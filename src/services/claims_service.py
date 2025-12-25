@@ -746,7 +746,12 @@ class ClaimsService:
             claim.patient_responsibility = patient_responsibility
 
         claim.adjudication_date = datetime.now(timezone.utc)
-        claim.adjudicator_id = approved_by
+        # Convert approved_by to UUID if valid, otherwise set to None
+        from uuid import UUID as PyUUID
+        try:
+            claim.adjudicator_id = PyUUID(approved_by) if approved_by else None
+        except (ValueError, TypeError):
+            claim.adjudicator_id = None
         claim.adjudication_type = "manual" if claim.status == ClaimStatus.NEEDS_REVIEW else "auto"
 
         await self._transition_status(
@@ -791,7 +796,12 @@ class ClaimsService:
         claim.denial_reason = denial_reason
         claim.denial_codes = denial_codes or []
         claim.adjudication_date = datetime.now(timezone.utc)
-        claim.adjudicator_id = denied_by
+        # Convert denied_by to UUID if valid, otherwise set to None
+        from uuid import UUID as PyUUID
+        try:
+            claim.adjudicator_id = PyUUID(denied_by) if denied_by else None
+        except (ValueError, TypeError):
+            claim.adjudicator_id = None
 
         await self._transition_status(
             claim,
