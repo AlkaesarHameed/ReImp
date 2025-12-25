@@ -1,0 +1,26 @@
+{
+  "name": "claims-portal-e2e",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/claims-portal-e2e/src",
+  "projectType": "application",
+  "tags": ["type:e2e", "scope:claims"],
+  "implicitDependencies": ["claims-portal"],
+  "targets": {
+    "e2e": {
+      "executor": "@nx/cypress:cypress",
+      "options": {
+        "cypressConfig": "apps/claims-portal-e2e/cypress.config.ts",
+        "devServerTarget": "claims-portal:serve:development",
+        "testingType": "e2e"
+      },
+      "configurations": {
+        "production": {
+          "devServerTarget": "claims-portal:serve:production"
+        },
+        "ci": {
+          "devServerTarget": "claims-portal:serve:production"
+        }
+      }
+    }
+  }
+}

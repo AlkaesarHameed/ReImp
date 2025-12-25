@@ -1,0 +1,117 @@
+# Local Development Services
+# Includes Ollama for local LLM inference
+
+services:
+  # Ollama - Local LLM Server
+  # Provides vision model (qwen2.5-vl) for document understanding
+  # and medical model (biomistral) for claims processing
+  ollama:
+    image: ollama/ollama:latest
+    container_name: claims-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+    restart: unless-stopped
+    # GPU support (uncomment if you have NVIDIA GPU with Docker GPU support)
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+  # PostgreSQL Database with pgvector extension
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: claims-postgres
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: claims
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: claims-redis
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MinIO Object Storage (S3-compatible)
+  minio:
+    image: minio/minio:latest
+    container_name: claims-minio
+    ports:
+      - "9002:9000"
+      - "9003:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin123
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  # PaddleOCR - Local OCR Server
+  # Provides multilingual OCR (English, Arabic) for document processing
+  # API endpoints:
+  #   POST http://localhost:9091/ocr - Single language OCR (lang=en or lang=ar)
+  #   POST http://localhost:9091/ocr/multi - Multi-language OCR (tries en,ar)
+  paddleocr:
+    build:
+      context: ./docker/paddleocr
+      dockerfile: Dockerfile
+    image: claims-paddleocr:latest
+    container_name: claims-paddleocr
+    ports:
+      - "9091:9090"
+    environment:
+      - LANG=en_US.UTF-8
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - paddleocr_data:/root/.paddleocr
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9090/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 180s
+
+volumes:
+  ollama_data:
+    name: claims-ollama-data
+  postgres_data:
+    name: claims-postgres-data
+  redis_data:
+    name: claims-redis-data
+  minio_data:
+    name: claims-minio-data
+  paddleocr_data:
+    name: claims-paddleocr-data

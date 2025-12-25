@@ -26,7 +26,8 @@ import {
 import { environment } from '../../../apps/claims-portal/src/environments/environment';
 
 // Enable mock mode when backend is not available (development)
-const ENABLE_MOCK_API = !environment.production;
+// Set to false to use real backend API even in development mode
+const ENABLE_MOCK_API = false; // Disabled - always use real backend API
 
 // In-memory store for mock claims (persists during session)
 const mockClaimsStore: Map<string, Claim> = new Map();

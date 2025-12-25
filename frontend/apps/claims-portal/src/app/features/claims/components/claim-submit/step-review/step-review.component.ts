@@ -647,7 +647,16 @@ export class StepReviewComponent {
   }>();
   @Output() proceedToSubmit = new EventEmitter<void>();
 
-  confirmed = false;
+  // Use a signal for confirmed to ensure canSubmit computed properly reacts to changes
+  readonly confirmedSignal = signal<boolean>(false);
+
+  // Getter/setter for template binding compatibility with [(ngModel)]
+  get confirmed(): boolean {
+    return this.confirmedSignal();
+  }
+  set confirmed(value: boolean) {
+    this.confirmedSignal.set(value);
+  }
 
   readonly validationErrors = signal<{ field: string; message: string }[]>([]);
   readonly validationWarnings = signal<{ field: string; message: string }[]>([]);
@@ -663,7 +672,7 @@ export class StepReviewComponent {
   );
 
   readonly canSubmit = computed(() =>
-    this.confirmed &&
+    this.confirmedSignal() &&
     this.validationErrors().length === 0 &&
     !this.submitting()
   );

@@ -309,10 +309,12 @@ class ClaimsService:
         self.session.add(status_history)
 
         await self.session.commit()
-        await self.session.refresh(claim)
+
+        # Re-query to get fully loaded claim with relationships
+        claim_with_relations = await self.get_claim(str(claim.id), include_line_items=True)
 
         logger.info(f"Created claim {tracking_number} (ID: {claim.id})")
-        return claim
+        return claim_with_relations
 
     async def add_line_item(
         self,

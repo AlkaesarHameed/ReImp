@@ -103,13 +103,16 @@ class TenantContextMiddleware(BaseHTTPMiddleware):
         settings = get_settings()
 
         # Development mode: Accept X-Dev-User header for mock authentication
+        # Use valid UUIDs for dev tenant/user to match database UUID columns
+        DEV_TENANT_UUID = "00000000-0000-0000-0000-000000000001"
+        DEV_USER_UUID = "00000000-0000-0000-0000-000000000002"
         if settings.ENVIRONMENT == "development":
             dev_user = request.headers.get("X-Dev-User")
             if dev_user:
                 logger.debug(f"Development mode: Setting tenant context for dev user '{dev_user}'")
                 set_tenant_context(
-                    tenant_id="dev-tenant-001",
-                    user_id=f"dev-{dev_user}",
+                    tenant_id=DEV_TENANT_UUID,
+                    user_id=DEV_USER_UUID,
                     permissions=[
                         "claims:read", "claims:write", "claims:create", "claims:update", "claims:approve",
                         "documents:read", "documents:write", "documents:upload", "documents:delete",
@@ -121,8 +124,8 @@ class TenantContextMiddleware(BaseHTTPMiddleware):
                 )
                 # Store mock claims in request state
                 request.state.token_claims = TokenClaims(
-                    sub=f"dev-{dev_user}",
-                    tenant_id="dev-tenant-001",
+                    sub=DEV_USER_UUID,
+                    tenant_id=DEV_TENANT_UUID,
                     tenant_slug="development",
                     roles=["administrator"],
                     permissions=[
@@ -210,14 +213,17 @@ async def get_token_claims(
     settings = get_settings()
 
     # Development mode: Accept mock auth header
+    # Use valid UUIDs for dev tenant/user to match database UUID columns
+    DEV_TENANT_UUID = "00000000-0000-0000-0000-000000000001"
+    DEV_USER_UUID = "00000000-0000-0000-0000-000000000002"
     if settings.ENVIRONMENT == "development":
         dev_user = request.headers.get("X-Dev-User")
         if dev_user:
             # Return mock claims with full permissions for development
             logger.debug(f"Development mode: Using mock auth for user '{dev_user}'")
             return TokenClaims(
-                sub=f"dev-{dev_user}",
-                tenant_id="dev-tenant-001",
+                sub=DEV_USER_UUID,
+                tenant_id=DEV_TENANT_UUID,
                 tenant_slug="development",
                 roles=["administrator"],
                 permissions=[
