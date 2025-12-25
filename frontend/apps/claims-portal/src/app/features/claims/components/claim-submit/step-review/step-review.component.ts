@@ -19,6 +19,7 @@ import {
   computed,
 } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
+import { switchMap } from 'rxjs/operators';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { DividerModule } from 'primeng/divider';
@@ -749,10 +750,13 @@ export class StepReviewComponent {
 
     const claim = this.buildClaimCreate();
 
-    this.claimsApi.createClaim(claim).subscribe({
-      next: (response) => {
+    // Create claim first (DRAFT status), then submit it (DRAFT -> SUBMITTED)
+    this.claimsApi.createClaim(claim).pipe(
+      switchMap((createdClaim) => this.claimsApi.submitClaim(createdClaim.id))
+    ).subscribe({
+      next: (submittedClaim) => {
         this.submitting.set(false);
-        this.submitSuccess.emit(response.id);
+        this.submitSuccess.emit(submittedClaim.id);
       },
       error: (error) => {
         this.submitting.set(false);
