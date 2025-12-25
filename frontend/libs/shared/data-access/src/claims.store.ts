@@ -74,6 +74,7 @@ export class ClaimsStore {
   private readonly _pageSize = signal<number>(20);
   private readonly _currentPage = signal<number>(1);
   private readonly _metrics = signal<ClaimMetrics | null>(null);
+  private readonly _totalRecords = signal<number>(0); // Server-side total for pagination
 
   // ============================================================================
   // Public Readonly Signals (State)
@@ -86,6 +87,7 @@ export class ClaimsStore {
   readonly pageSize = this._pageSize.asReadonly();
   readonly currentPage = this._currentPage.asReadonly();
   readonly metrics = this._metrics.asReadonly();
+  readonly totalRecords = this._totalRecords.asReadonly(); // Server-side total for pagination
 
   // ============================================================================
   // Computed Selectors
@@ -323,6 +325,13 @@ export class ClaimsStore {
    */
   setCurrentPage(page: number): void {
     this._currentPage.set(page);
+  }
+
+  /**
+   * Set total records count from server-side pagination.
+   */
+  setTotalRecords(total: number): void {
+    this._totalRecords.set(total);
   }
 
   // ============================================================================

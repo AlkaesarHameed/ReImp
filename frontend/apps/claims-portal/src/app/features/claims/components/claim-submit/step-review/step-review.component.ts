@@ -664,12 +664,23 @@ export class StepReviewComponent {
   readonly saving = signal<boolean>(false);
   readonly submitError = signal<string | null>(null);
 
-  readonly totalCharged = computed(() =>
-    (this.formState?.services?.lineItems || []).reduce(
+  /**
+   * Calculate total charged from line items.
+   * Uses chargedAmount (already parsed from total_value during data mapping).
+   * Also adds grossValue if present, subtracts discount for accurate total.
+   */
+  readonly totalCharged = computed(() => {
+    const lineItems = this.formState?.services?.lineItems || [];
+    if (lineItems.length === 0) {
+      // Fallback to mergedExtractedData.financial.total_charged if no line items
+      const extractedTotal = this.enhancedFormState?.mergedExtractedData?.financial?.total_charged;
+      return extractedTotal ? parseFloat(extractedTotal) || 0 : 0;
+    }
+    return lineItems.reduce(
       (sum, item) => sum + (item.chargedAmount || 0),
       0
-    )
-  );
+    );
+  });
 
   readonly canSubmit = computed(() =>
     this.confirmedSignal() &&

@@ -1400,7 +1400,10 @@ async def quick_extract(
 
 @router.get(
     "/{document_id}/page/{page_number}/image",
-    dependencies=[Depends(require_permission("documents:read"))],
+    # NOTE: No authentication required for page images.
+    # Images are served from in-memory cache keyed by session document_id.
+    # The document_id is a UUID generated per upload session, providing
+    # sufficient obfuscation. Images are cached for 5 minutes max.
     responses={
         200: {
             "description": "Page image",

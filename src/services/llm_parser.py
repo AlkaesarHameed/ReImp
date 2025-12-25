@@ -231,12 +231,39 @@ For each LINE ITEM extract:
 - total_value: Final amount
 - category: Category like "Pharmacy", "Inventory Item", "Surgeon Fees", "Bed Charge", etc.
 
-=== DIAGNOSIS EXTRACTION ===
+=== DIAGNOSIS EXTRACTION (CRITICAL) ===
 
-Extract ALL diagnoses mentioned:
-- Look for: "Diagnosis", "Dx", "Primary Diagnosis", "Chief Complaint", "Condition"
-- Extract ICD-10 codes if present, otherwise just description
-- Mark first diagnosis as is_primary: true
+Extract ALL diagnoses from the document. This is VERY IMPORTANT for medical claims.
+
+**Where to Find Diagnoses:**
+- Look for: "Diagnosis", "Dx", "Primary Diagnosis", "Principal Diagnosis", "Admitting Diagnosis"
+- Also check: "Chief Complaint", "Reason for Visit", "Condition", "Clinical Findings"
+- Look for ICD-10 codes (format: letter + 2-3 digits + optional decimal, e.g., "J06.9", "M54.5", "K21.0")
+- Check table headers like "ICD Code", "Diagnosis Code", "DX", "Medical Condition"
+
+**Diagnosis Classification Rules:**
+1. **Principal/Primary Diagnosis** (is_primary: true):
+   - The condition established AFTER study to be chiefly responsible for admission/visit
+   - Usually appears first or is explicitly labeled "Primary" or "Principal"
+   - Only ONE diagnosis should have is_primary: true
+
+2. **Secondary Diagnoses** (is_primary: false):
+   - All other conditions that coexist or develop during the treatment
+   - Contributing conditions, comorbidities, complications
+   - Can have MULTIPLE secondary diagnoses
+
+3. **If No Explicit Classification:**
+   - The FIRST diagnosis mentioned is usually the primary
+   - If multiple unlabeled diagnoses exist, infer from context (most severe = primary)
+   - Conditions like "Diabetes", "Hypertension" listed alongside acute conditions are usually secondary
+
+**Diagnosis Inference:**
+If diagnoses are not explicitly stated, try to INFER them from:
+- Treatment being provided (e.g., antibiotics suggest infection)
+- Procedures performed (e.g., endoscopy suggests GI issue)
+- Medications prescribed (e.g., insulin = diabetes, antihypertensives = hypertension)
+- Doctor's notes or clinical summary
+- When inferring, set confidence lower (0.6-0.7)
 
 === JSON OUTPUT FORMAT ===
 
@@ -261,7 +288,9 @@ Extract ALL diagnoses mentioned:
         "doctor_name": "treating doctor name"
     }},
     "diagnoses": [
-        {{"code": "ICD-10 code or empty", "description": "diagnosis description", "is_primary": true}}
+        {{"code": "K21.0", "description": "Gastroesophageal reflux disease with esophagitis", "is_primary": true, "confidence": 0.9}},
+        {{"code": "E11.9", "description": "Type 2 diabetes mellitus without complications", "is_primary": false, "confidence": 0.85}},
+        {{"code": "", "description": "Inferred from medications: Hypertension", "is_primary": false, "confidence": 0.6}}
     ],
     "procedures": [],
     "line_items": [

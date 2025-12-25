@@ -192,10 +192,10 @@ export class ClaimsApiService {
       if (params.dateTo) {
         httpParams = httpParams.set('date_to', params.dateTo);
       }
-      if (params.page !== undefined) {
+      if (params.page !== undefined && !isNaN(params.page) && params.page > 0) {
         httpParams = httpParams.set('page', params.page.toString());
       }
-      if (params.size !== undefined) {
+      if (params.size !== undefined && !isNaN(params.size) && params.size > 0) {
         httpParams = httpParams.set('size', params.size.toString());
       }
       if (params.sortBy) {

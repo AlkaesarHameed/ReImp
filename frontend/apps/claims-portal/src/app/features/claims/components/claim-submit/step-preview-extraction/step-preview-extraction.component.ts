@@ -233,11 +233,11 @@ interface CodeItem {
                 <h4>
                   <i class="pi pi-list"></i>
                   Procedures
-                  <span class="count-badge">{{ procedureCodes().length }}</span>
+                  <span class="count-badge">{{ proceduresOnly().length }}</span>
                 </h4>
-                @if (procedureCodes().length > 0) {
+                @if (proceduresOnly().length > 0) {
                   <div class="code-list">
-                    @for (proc of procedureCodes(); track proc.code; let i = $index) {
+                    @for (proc of proceduresOnly(); track proc.code; let i = $index) {
                       <div class="code-card">
                         <div class="code-header">
                           <span class="code-value">{{ proc.code }}</span>
@@ -285,6 +285,61 @@ interface CodeItem {
             </div>
           </div>
         </div>
+
+        <!-- Row 2.5: Services & Line Items (if present) -->
+        @if (lineItems().length > 0) {
+          <div class="content-row">
+            <div class="info-section services-section">
+              <div class="section-header">
+                <div class="section-title">
+                  <i class="pi pi-shopping-cart"></i>
+                  <h3>Services & Line Items</h3>
+                </div>
+                <span class="item-count">{{ lineItems().length }} item(s) · Total: {{ getCurrencySymbol() }}{{ calculateLineItemsTotal() }}</span>
+              </div>
+              <div class="section-body">
+                <table class="line-items-table">
+                  <thead>
+                    <tr>
+                      <th style="width: 50px">#</th>
+                      <th>Description</th>
+                      <th style="width: 100px">Code</th>
+                      <th style="width: 100px">Category</th>
+                      <th style="width: 60px">Qty</th>
+                      <th style="width: 100px" class="text-right">Rate</th>
+                      <th style="width: 100px" class="text-right">Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (item of lineItems(); track item.sl_no || $index; let i = $index) {
+                      <tr>
+                        <td>{{ item.sl_no || (i + 1) }}</td>
+                        <td>{{ item.description }}</td>
+                        <td><code>{{ item.sac_code || '-' }}</code></td>
+                        <td>
+                          <p-tag
+                            [value]="item.category || 'Services'"
+                            [severity]="getCategorySeverity(item.category)"
+                            styleClass="category-tag"
+                          ></p-tag>
+                        </td>
+                        <td>{{ item.quantity || 1 }}</td>
+                        <td class="text-right">{{ item.rate || '-' }}</td>
+                        <td class="text-right font-semibold">{{ item.total_value || item.gross_value || '0.00' }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                  <tfoot>
+                    <tr class="totals-row">
+                      <td colspan="6" class="text-right"><strong>Total:</strong></td>
+                      <td class="text-right"><strong>{{ getCurrencySymbol() }}{{ calculateLineItemsTotal() }}</strong></td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+          </div>
+        }
 
         <!-- Row 3: Financial & Dates/Identifiers -->
         <div class="content-row two-columns">
@@ -785,6 +840,72 @@ interface CodeItem {
       font-size: 1.25rem;
     }
 
+    /* Services & Line Items Section */
+    .services-section {
+      flex: 1;
+    }
+
+    .item-count {
+      font-size: 0.85rem;
+      color: #666;
+      font-weight: 500;
+    }
+
+    .line-items-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    .line-items-table th,
+    .line-items-table td {
+      padding: 0.75rem 0.5rem;
+      text-align: left;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .line-items-table th {
+      background: #f8f9fa;
+      font-weight: 600;
+      color: #555;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+    }
+
+    .line-items-table tbody tr:hover {
+      background: #f8f9fa;
+    }
+
+    .line-items-table code {
+      background: #e8e8e8;
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      font-size: 0.85rem;
+    }
+
+    .line-items-table .text-right {
+      text-align: right;
+    }
+
+    .line-items-table .font-semibold {
+      font-weight: 600;
+    }
+
+    .line-items-table .totals-row {
+      background: #f0f7ff;
+      font-weight: 600;
+    }
+
+    .line-items-table .totals-row td {
+      border-bottom: none;
+      border-top: 2px solid #667eea;
+    }
+
+    :host ::ng-deep .category-tag {
+      font-size: 0.7rem;
+      padding: 0.2rem 0.5rem;
+    }
+
     /* Actions */
     .preview-actions {
       display: flex;
@@ -963,6 +1084,30 @@ export class StepPreviewExtractionComponent {
     }));
   });
 
+  /**
+   * Raw line items from LLM extraction (hospital bills, invoices)
+   */
+  readonly lineItems = computed(() => {
+    const data = this.mergedExtractedData();
+    return (data as any)?.line_items || [];
+  });
+
+  /**
+   * Standard procedure codes only (CPT, HCPCS)
+   */
+  readonly proceduresOnly = computed((): CodeItem[] => {
+    const procedures = this.mergedExtractedData()?.procedures || [];
+    return procedures.map(proc => ({
+      code: proc.code,
+      description: proc.description,
+      confidence: proc.confidence,
+      modifiers: proc.modifiers,
+      quantity: proc.quantity,
+      chargedAmount: proc.charged_amount,
+      serviceDate: proc.service_date,
+    }));
+  });
+
   readonly procedureCodes = computed((): CodeItem[] => {
     const data = this.mergedExtractedData();
     const procedures = data?.procedures || [];
@@ -1053,6 +1198,46 @@ export class StepPreviewExtractionComponent {
     if (confidence >= 0.85) return 'high';
     if (confidence >= 0.70) return 'medium';
     return 'low';
+  }
+
+  /**
+   * Calculate total of all line items.
+   * Uses same logic as Step 3 for consistency.
+   */
+  calculateLineItemsTotal(): string {
+    const items = this.lineItems();
+    if (items.length === 0) return '0.00';
+
+    const total = items.reduce((sum: number, item: any) => {
+      const value = parseFloat(item.total_value || item.gross_value || '0') || 0;
+      return sum + value;
+    }, 0);
+
+    return total.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  }
+
+  /**
+   * Get category severity for color-coding.
+   */
+  getCategorySeverity(category: string | undefined): 'success' | 'info' | 'warn' | 'secondary' {
+    if (!category) return 'secondary';
+    const normalizedCategory = category.toLowerCase();
+    if (normalizedCategory.includes('pharma') || normalizedCategory.includes('medic') ||
+        normalizedCategory.includes('drug') || normalizedCategory.includes('injection')) {
+      return 'success';
+    }
+    if (normalizedCategory.includes('inventory') || normalizedCategory.includes('supply') ||
+        normalizedCategory.includes('consumable')) {
+      return 'info';
+    }
+    if (normalizedCategory.includes('fee') || normalizedCategory.includes('charge') ||
+        normalizedCategory.includes('surgeon') || normalizedCategory.includes('doctor')) {
+      return 'warn';
+    }
+    return 'secondary';
   }
 
   // =========================================================================

@@ -9,7 +9,7 @@ Provides:
 - Statistics
 
 Source: Design Document Section 4.1 - Claims Processing
-Verified: 2025-12-18
+Verified: 2025-12-25
 """
 
 import logging
@@ -51,32 +51,80 @@ router = APIRouter(
 
 
 class LineItemCreate(BaseModel):
-    """Schema for creating a line item."""
+    """
+    Schema for creating a line item.
 
-    procedure_code: str = Field(..., min_length=1, max_length=20)
-    service_date: date
-    charged_amount: Decimal = Field(..., gt=0)
+    Supports both standard procedure codes and SAC/invoice line items.
+    Field validations are relaxed to support document-first workflow.
+
+    Source: Design Document Section 4.1 - Line Items
+    Verified: 2025-12-25
+    """
+
+    procedure_code: str = Field(..., min_length=1, max_length=100)  # Allow longer for descriptions
+    service_date: Optional[date] = None  # Optional for document-first
+    charged_amount: Decimal = Field(..., ge=0)  # Allow 0 for line items without amounts
     quantity: int = Field(default=1, ge=1)
-    procedure_code_system: ProcedureCodeSystem = ProcedureCodeSystem.CPT
-    modifiers: list[str] = Field(default_factory=list)
+    procedure_code_system: Optional[str] = "CPT"  # Made string to support "CPT-4", "HCPCS", "SAC"
+    modifiers: Optional[list[str]] = Field(default_factory=list)
+    modifier_codes: Optional[list[str]] = None  # Alias for frontend compatibility
     description: Optional[str] = Field(None, max_length=500)
     diagnosis_pointers: list[int] = Field(default_factory=lambda: [1])
     unit_type: str = Field(default="UN", max_length=10)
     ndc_code: Optional[str] = Field(None, max_length=20)
+    unit_price: Optional[Decimal] = None  # Frontend sends this
+
+
+class PatientInfoCreate(BaseModel):
+    """Patient information for claim submission (document-first workflow)."""
+
+    member_id: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    date_of_birth: Optional[str] = None
+    relationship: Optional[str] = None
+
+
+class ProviderInfoCreate(BaseModel):
+    """Provider information for claim submission (document-first workflow)."""
+
+    npi: Optional[str] = None
+    name: Optional[str] = None
+    tax_id: Optional[str] = None
 
 
 class ClaimCreate(BaseModel):
-    """Schema for creating a claim."""
+    """
+    Schema for creating a claim.
 
-    policy_id: str
-    member_id: str
-    provider_id: str
+    Supports document-first workflow where policy/member/provider IDs may not
+    be known upfront. These can be resolved later during processing.
+
+    Source: Design Document Section 4.1 - Document-First Claims Processing
+    Verified: 2025-12-25
+    """
+
+    # Optional references for document-first workflow
+    policy_id: Optional[str] = None
+    member_id: Optional[str] = None
+    provider_id: Optional[str] = None
+
+    # Embedded patient/provider info (for document-first workflow)
+    patient: Optional[PatientInfoCreate] = None
+    provider: Optional[ProviderInfoCreate] = None
+    billing_provider: Optional[ProviderInfoCreate] = None
+    referring_provider: Optional[ProviderInfoCreate] = None
+
+    # Required fields
     claim_type: ClaimType
     service_date_from: date
     service_date_to: date
-    diagnosis_codes: list[str] = Field(..., min_length=1)
-    primary_diagnosis: str
-    total_charged: Decimal = Field(..., gt=0)
+    # Allow empty diagnosis_codes for document-first workflow (can be populated later)
+    diagnosis_codes: list[str] = Field(default_factory=list)
+    primary_diagnosis: str = ""  # Allow empty for document-first workflow
+    total_charged: Decimal = Field(default=Decimal("0"), ge=0)  # Allow 0 for draft claims
+
+    # Optional fields
     currency: str = Field(default="USD", max_length=3)
     source: ClaimSource = ClaimSource.PORTAL
     priority: ClaimPriority = ClaimPriority.NORMAL
@@ -131,9 +179,9 @@ class ClaimResponse(BaseModel):
     source: str
     priority: str
     status: str
-    policy_id: str
-    member_id: str
-    provider_id: str
+    policy_id: Optional[str] = None
+    member_id: Optional[str] = None
+    provider_id: Optional[str] = None
     service_date_from: date
     service_date_to: date
     diagnosis_codes: list[str]
@@ -161,7 +209,7 @@ class ClaimListResponse(BaseModel):
     items: list[ClaimResponse]
     total: int
     page: int
-    page_size: int
+    size: int  # Changed from page_size to match frontend PaginatedResponse interface
 
 
 class ClaimSubmitResponse(BaseModel):
@@ -248,9 +296,9 @@ def _claim_to_response(claim) -> ClaimResponse:
         source=claim.source.value,
         priority=claim.priority.value,
         status=claim.status.value,
-        policy_id=str(claim.policy_id),
-        member_id=str(claim.member_id),
-        provider_id=str(claim.provider_id),
+        policy_id=str(claim.policy_id) if claim.policy_id else None,
+        member_id=str(claim.member_id) if claim.member_id else None,
+        provider_id=str(claim.provider_id) if claim.provider_id else None,
         service_date_from=claim.service_date_from,
         service_date_to=claim.service_date_to,
         diagnosis_codes=claim.diagnosis_codes,
@@ -334,21 +382,35 @@ async def create_claim(
             discharge_date=claim_data.discharge_date,
         )
 
-        line_items = [
-            LineItemDTO(
-                procedure_code=item.procedure_code,
-                service_date=item.service_date,
-                charged_amount=item.charged_amount,
-                quantity=item.quantity,
-                procedure_code_system=item.procedure_code_system,
-                modifiers=item.modifiers,
-                description=item.description,
-                diagnosis_pointers=item.diagnosis_pointers,
-                unit_type=item.unit_type,
-                ndc_code=item.ndc_code,
+        line_items = []
+        for item in claim_data.line_items:
+            # Normalize procedure_code_system to lowercase for enum matching
+            # Frontend may send 'HCPCS' (uppercase) but enum expects 'hcpcs'
+            proc_system = item.procedure_code_system
+            if proc_system and isinstance(proc_system, str):
+                proc_system_lower = proc_system.lower()
+                # Try to convert to enum, default to CPT if not recognized
+                try:
+                    proc_system = ProcedureCodeSystem(proc_system_lower)
+                except ValueError:
+                    proc_system = ProcedureCodeSystem.CPT
+            elif proc_system is None:
+                proc_system = ProcedureCodeSystem.CPT
+
+            line_items.append(
+                LineItemDTO(
+                    procedure_code=item.procedure_code,
+                    service_date=item.service_date,
+                    charged_amount=item.charged_amount,
+                    quantity=item.quantity,
+                    procedure_code_system=proc_system,
+                    modifiers=item.modifiers or item.modifier_codes,  # Support both field names
+                    description=item.description,
+                    diagnosis_pointers=item.diagnosis_pointers,
+                    unit_type=item.unit_type,
+                    ndc_code=item.ndc_code,
+                )
             )
-            for item in claim_data.line_items
-        ]
 
         claim = await service.create_claim(create_dto, line_items)
         return _claim_to_response(claim)
@@ -407,7 +469,7 @@ async def list_claims(
             items=[_claim_to_response(c) for c in claims],
             total=total,
             page=page,
-            page_size=page_size,
+            size=page_size,  # Changed to match frontend PaginatedResponse interface
         )
 
     except Exception as e:

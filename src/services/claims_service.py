@@ -202,21 +202,28 @@ class ClaimsService:
         """
         year = datetime.now(timezone.utc).year
 
-        # Get the count of claims for this tenant this year
-        # This is a simplified approach - production would use a sequence table
+        # Get the max sequence number for this year to avoid duplicates
+        # This handles failed transactions that may have created gaps
         from src.models.claim import Claim
 
         result = await self.session.execute(
-            select(func.count(Claim.id)).where(
-                and_(
-                    Claim.tenant_id == tenant_id,
-                    func.extract("year", Claim.created_at) == year,
-                )
+            select(func.max(Claim.tracking_number)).where(
+                Claim.tracking_number.like(f"CLM-{year}-%")
             )
         )
-        count = result.scalar_one() + 1
+        max_tracking = result.scalar_one_or_none()
 
-        return f"CLM-{year}-{count:06d}"
+        if max_tracking:
+            # Extract sequence number from last tracking number
+            try:
+                seq = int(max_tracking.split("-")[-1])
+                next_seq = seq + 1
+            except (ValueError, IndexError):
+                next_seq = 1
+        else:
+            next_seq = 1
+
+        return f"CLM-{year}-{next_seq:06d}"
 
     # =========================================================================
     # Create Operations
@@ -246,7 +253,7 @@ class ClaimsService:
 
         # Create claim
         claim = Claim(
-            id=str(uuid4()),
+            id=uuid4(),
             tenant_id=claim_data.tenant_id,
             tracking_number=tracking_number,
             external_claim_id=claim_data.external_claim_id,
@@ -280,7 +287,7 @@ class ClaimsService:
         if line_items:
             for i, item_data in enumerate(line_items, start=1):
                 line_item = ClaimLineItem(
-                    id=str(uuid4()),
+                    id=uuid4(),
                     claim_id=claim.id,
                     line_number=i,
                     procedure_code=item_data.procedure_code,
@@ -297,12 +304,21 @@ class ClaimsService:
                 self.session.add(line_item)
 
         # Record initial status
+        # Convert created_by to UUID if valid
+        from uuid import UUID as PyUUID
+        created_by_uuid = None
+        if created_by:
+            try:
+                created_by_uuid = PyUUID(created_by)
+            except (ValueError, TypeError):
+                created_by_uuid = None
+
         status_history = ClaimStatusHistory(
-            id=str(uuid4()),
+            id=uuid4(),
             claim_id=claim.id,
             previous_status=None,
             new_status=ClaimStatus.DRAFT,
-            changed_by=created_by,
+            changed_by=created_by_uuid,
             actor_type="user" if created_by else "system",
             reason="Claim created",
         )
@@ -337,7 +353,7 @@ class ClaimsService:
         line_number = len(claim.line_items) + 1 if claim.line_items else 1
 
         line_item = ClaimLineItem(
-            id=str(uuid4()),
+            id=uuid4(),
             claim_id=claim_id,
             line_number=line_number,
             procedure_code=item_data.procedure_code,
@@ -576,7 +592,12 @@ class ClaimsService:
         )
 
         claim.submitted_at = datetime.now(timezone.utc)
-        claim.submitted_by = submitted_by
+        # Convert submitted_by to UUID if valid, otherwise set to None
+        try:
+            from uuid import UUID as PyUUID
+            claim.submitted_by = PyUUID(submitted_by) if submitted_by else None
+        except (ValueError, TypeError):
+            claim.submitted_by = None
 
         await self.session.commit()
         await self.session.refresh(claim)
@@ -795,16 +816,25 @@ class ClaimsService:
     ) -> None:
         """Record status transition in history."""
         from src.models.claim import ClaimStatusHistory
+        from uuid import UUID as PyUUID
 
         previous_status = claim.status
         claim.status = new_status
 
+        # Convert changed_by to UUID if valid
+        changed_by_uuid = None
+        if changed_by:
+            try:
+                changed_by_uuid = PyUUID(changed_by)
+            except (ValueError, TypeError):
+                changed_by_uuid = None
+
         history = ClaimStatusHistory(
-            id=str(uuid4()),
+            id=uuid4(),
             claim_id=claim.id,
             previous_status=previous_status,
             new_status=new_status,
-            changed_by=changed_by,
+            changed_by=changed_by_uuid,
             actor_type="user" if changed_by else "system",
             reason=reason,
             details=details,

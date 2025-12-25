@@ -334,8 +334,10 @@ export class ClaimsListComponent implements OnInit, OnDestroy {
   private readonly destroy$ = new Subject<void>();
 
   // State from store
-  readonly claims = computed(() => this.claimsStore.paginatedClaims());
-  readonly totalRecords = computed(() => this.claimsStore.totalCount());
+  // Use claims() directly - API already returns paginated results
+  readonly claims = computed(() => this.claimsStore.claims());
+  // Use totalRecords from store - set from API response.total for server-side pagination
+  readonly totalRecords = computed(() => this.claimsStore.totalRecords());
   readonly loading = computed(() => this.claimsStore.loading());
   readonly error = computed(() => this.claimsStore.error());
   readonly showRetry = computed(() => !!this.claimsStore.error());
@@ -402,10 +404,14 @@ export class ClaimsListComponent implements OnInit, OnDestroy {
   loadClaims(event: any): void {
     this.claimsStore.setLoading(true);
 
-    const page = Math.floor(event.first / event.rows) + 1;
+    // Ensure valid pagination values (handle undefined/NaN from virtual scroll)
+    const rows = event.rows && !isNaN(event.rows) ? event.rows : this.pageSize;
+    const first = event.first && !isNaN(event.first) ? event.first : 0;
+    const page = Math.floor(first / rows) + 1;
+
     const params = {
       page,
-      size: event.rows,
+      size: rows,
       status: this.selectedStatus || undefined,
       claimType: this.selectedType || undefined,
       search: this.searchTerm || undefined,
@@ -419,6 +425,7 @@ export class ClaimsListComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (response) => {
           this.claimsStore.setClaims(response.items);
+          this.claimsStore.setTotalRecords(response.total); // Set server-side total for pagination
           this.claimsStore.setCurrentPage(response.page);
           this.claimsStore.setPageSize(response.size);
           this.claimsStore.setLoading(false);

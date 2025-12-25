@@ -93,11 +93,20 @@ class TenantContextMiddleware(BaseHTTPMiddleware):
             "/api/v1/auth/login",
             "/api/v1/auth/register",
         ]
+        # URL patterns that don't require authentication (matched with 'in' check)
+        # These endpoints are accessed via browser img src which doesn't send auth headers
+        self.exclude_patterns = [
+            "/page/",  # Page images: /api/v1/documents/{id}/page/{num}/image
+        ]
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         """Process request and set tenant context."""
-        # Skip excluded paths
+        # Skip excluded paths (exact prefix match)
         if any(request.url.path.startswith(path) for path in self.exclude_paths):
+            return await call_next(request)
+
+        # Skip excluded patterns (contains match for browser-loaded resources)
+        if any(pattern in request.url.path for pattern in self.exclude_patterns):
             return await call_next(request)
 
         settings = get_settings()

@@ -157,7 +157,12 @@ function extractValidationErrors(error: HttpErrorResponse): string {
  * Sanitize error message to remove potential PHI.
  * HIPAA compliance: Never expose member IDs, SSN, or other PHI in errors.
  */
-function sanitizeErrorMessage(message: string): string {
+function sanitizeErrorMessage(message: string | undefined | null): string {
+  // Handle undefined/null messages
+  if (!message || typeof message !== 'string') {
+    return 'An error occurred. Please try again.';
+  }
+
   // Remove potential PHI patterns
   return message
     .replace(/\b\d{3}-\d{2}-\d{4}\b/g, '[REDACTED]') // SSN

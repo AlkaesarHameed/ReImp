@@ -288,7 +288,7 @@ interface EditableField {
               }
             </p-accordionTab>
 
-            <!-- Procedure Codes -->
+            <!-- Procedure Codes (CPT/HCPCS) -->
             <p-accordionTab header="Procedure Codes">
               @if (mergedData()?.procedures?.length) {
                 <div class="codes-list">
@@ -311,7 +311,61 @@ interface EditableField {
                   }
                 </div>
               } @else {
-                <p class="no-data">No procedure codes extracted</p>
+                <p class="no-data">No CPT/HCPCS procedure codes extracted</p>
+              }
+            </p-accordionTab>
+
+            <!-- Services & Line Items (from invoices/hospital bills) -->
+            <p-accordionTab header="Services & Line Items">
+              @if (lineItems().length > 0) {
+                <div class="line-items-table">
+                  <table class="items-table">
+                    <thead>
+                      <tr>
+                        <th>#</th>
+                        <th>Description</th>
+                        <th>Category</th>
+                        <th>Code</th>
+                        <th>Qty</th>
+                        <th>Rate</th>
+                        <th>Total</th>
+                        <th>Conf.</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (item of lineItems(); track item.sl_no; let i = $index) {
+                        <tr>
+                          <td>{{ item.sl_no || i + 1 }}</td>
+                          <td class="description-cell">{{ item.description }}</td>
+                          <td>
+                            <p-tag
+                              [value]="item.category || 'Services'"
+                              [severity]="getCategorySeverity(item.category)"
+                              styleClass="category-tag"
+                            ></p-tag>
+                          </td>
+                          <td class="code-cell">{{ item.sac_code || '-' }}</td>
+                          <td>{{ item.quantity }}</td>
+                          <td>{{ item.rate || '-' }}</td>
+                          <td class="total-cell">{{ item.total_value }}</td>
+                          <td>
+                            <p-tag
+                              [value]="((item.confidence || 0.8) * 100).toFixed(0) + '%'"
+                              [severity]="getConfidenceSeverity(item.confidence || 0.8)"
+                              styleClass="conf-tag"
+                            ></p-tag>
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                  <div class="items-summary">
+                    <span class="items-count">{{ lineItems().length }} item(s)</span>
+                    <span class="items-total">Total: {{ calculateLineItemsTotal() }}</span>
+                  </div>
+                </div>
+              } @else {
+                <p class="no-data">No services or line items extracted from invoice</p>
               }
             </p-accordionTab>
 
@@ -655,6 +709,83 @@ interface EditableField {
       font-style: italic;
     }
 
+    /* Line Items Table Styles */
+    .line-items-table {
+      overflow-x: auto;
+    }
+
+    .items-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    .items-table th {
+      background: #f8f9fa;
+      padding: 0.75rem 0.5rem;
+      text-align: left;
+      font-weight: 600;
+      border-bottom: 2px solid #dee2e6;
+      white-space: nowrap;
+    }
+
+    .items-table td {
+      padding: 0.5rem;
+      border-bottom: 1px solid #e9ecef;
+      vertical-align: middle;
+    }
+
+    .items-table tbody tr:hover {
+      background: #f8f9fa;
+    }
+
+    .description-cell {
+      max-width: 250px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .code-cell {
+      font-family: monospace;
+      font-weight: 500;
+    }
+
+    .total-cell {
+      font-weight: 600;
+      color: #28a745;
+    }
+
+    :host ::ng-deep .category-tag {
+      font-size: 0.7rem;
+      padding: 0.2rem 0.4rem;
+    }
+
+    :host ::ng-deep .conf-tag {
+      font-size: 0.7rem;
+      padding: 0.2rem 0.4rem;
+    }
+
+    .items-summary {
+      display: flex;
+      justify-content: space-between;
+      padding: 1rem;
+      background: #f8f9fa;
+      border-top: 2px solid #dee2e6;
+      margin-top: 0.5rem;
+      border-radius: 0 0 4px 4px;
+    }
+
+    .items-count {
+      color: #6c757d;
+    }
+
+    .items-total {
+      font-weight: 700;
+      color: #28a745;
+      font-size: 1.1rem;
+    }
+
     .step-navigation {
       display: flex;
       justify-content: space-between;
@@ -771,6 +902,26 @@ export class StepProcessingComponent implements OnInit, OnDestroy {
   readonly conflicts = computed(() =>
     this.mergedData()?.conflicts ?? []
   );
+
+  /**
+   * Get line items from merged data.
+   * Line items include medications, supplies, services from invoices/hospital bills.
+   * Items without a category are assigned 'Services' as default.
+   */
+  readonly lineItems = computed(() => {
+    const data = this.mergedData();
+    if (!data) return [];
+
+    // Access line_items from the merged data (may be on the data object)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const items = (data as any).line_items || [];
+
+    // Ensure each item has a category, default to 'Services' if not classified
+    return items.map((item: any) => ({
+      ...item,
+      category: item.category || 'Services',
+    }));
+  });
 
   readonly canProceed = computed(() => {
     const processed = this.processedCount();
@@ -1082,4 +1233,58 @@ export class StepProcessingComponent implements OnInit, OnDestroy {
   getDocumentTypeLabel = getDocumentTypeLabel;
   formatFileSize = formatFileSize;
   getConfidenceSeverity = getConfidenceSeverity;
+
+  /**
+   * Get severity color for category tags.
+   * Categorizes items by type for visual distinction.
+   */
+  getCategorySeverity(category: string | undefined): 'success' | 'info' | 'warn' | 'secondary' {
+    if (!category) return 'secondary';
+
+    const normalizedCategory = category.toLowerCase();
+
+    // Pharmacy/Medications - green
+    if (normalizedCategory.includes('pharma') ||
+        normalizedCategory.includes('medic') ||
+        normalizedCategory.includes('drug') ||
+        normalizedCategory.includes('injection')) {
+      return 'success';
+    }
+
+    // Inventory/Supplies - blue
+    if (normalizedCategory.includes('inventory') ||
+        normalizedCategory.includes('supply') ||
+        normalizedCategory.includes('consumable')) {
+      return 'info';
+    }
+
+    // Fees/Charges - warning
+    if (normalizedCategory.includes('fee') ||
+        normalizedCategory.includes('charge') ||
+        normalizedCategory.includes('surgeon') ||
+        normalizedCategory.includes('doctor')) {
+      return 'warn';
+    }
+
+    // Default for Services and others
+    return 'secondary';
+  }
+
+  /**
+   * Calculate total of all line items.
+   */
+  calculateLineItemsTotal(): string {
+    const items = this.lineItems();
+    if (items.length === 0) return '0.00';
+
+    const total = items.reduce((sum: number, item: any) => {
+      const value = parseFloat(item.total_value || item.gross_value || '0') || 0;
+      return sum + value;
+    }, 0);
+
+    return total.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  }
 }

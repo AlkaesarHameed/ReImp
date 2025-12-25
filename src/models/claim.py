@@ -112,27 +112,28 @@ class Claim(Base, UUIDModel, TimeStampedModel):
         comment="Current claim status",
     )
 
-    # Foreign Keys
-    policy_id: Mapped[UUID] = mapped_column(
+    # Foreign Keys (nullable to support document-first workflow)
+    # Policy/member/provider can be resolved later during processing
+    policy_id: Mapped[Optional[UUID]] = mapped_column(
         PG_UUID(as_uuid=True),
         ForeignKey("policies.id", ondelete="RESTRICT"),
-        nullable=False,
+        nullable=True,  # Allow NULL for document-first workflow
         index=True,
-        comment="Associated policy ID",
+        comment="Associated policy ID (resolved from documents or manual entry)",
     )
-    member_id: Mapped[UUID] = mapped_column(
+    member_id: Mapped[Optional[UUID]] = mapped_column(
         PG_UUID(as_uuid=True),
         ForeignKey("members.id", ondelete="RESTRICT"),
-        nullable=False,
+        nullable=True,  # Allow NULL for document-first workflow
         index=True,
-        comment="Patient/member ID",
+        comment="Patient/member ID (resolved from documents or manual entry)",
     )
-    provider_id: Mapped[UUID] = mapped_column(
+    provider_id: Mapped[Optional[UUID]] = mapped_column(
         PG_UUID(as_uuid=True),
         ForeignKey("healthcare_providers.id", ondelete="RESTRICT"),
-        nullable=False,
+        nullable=True,  # Allow NULL for document-first workflow
         index=True,
-        comment="Rendering provider ID",
+        comment="Rendering provider ID (resolved from documents or manual entry)",
     )
     billing_provider_id: Mapped[Optional[UUID]] = mapped_column(
         PG_UUID(as_uuid=True),
